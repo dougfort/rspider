@@ -1,0 +1,7 @@
+[package]
+name = "player"
+version = "0.1.0"
+authors = ["dougfort <doug.fort@gmail.com>"]
+
+[dependencies]
+cards = {path = "../cards" }
