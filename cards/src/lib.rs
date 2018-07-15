@@ -23,7 +23,7 @@ pub enum Rank {
     King,
 }
 
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Card {
     pub suit: Suit,
     pub rank: Rank,
@@ -99,5 +99,13 @@ mod tests {
     fn deck() {
         let d = super::deck();
         assert_eq!(d.len(), 52);
+        let ace_of_clubs = super::Card {suit: super::Suit::Clubs, rank: super::Rank::Ace};
+        let mut prev = ace_of_clubs;
+        for c in d {
+            if c > ace_of_clubs {
+                assert!(c > prev);
+                prev = c;
+            }
+        }
     }
 }
