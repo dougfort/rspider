@@ -1,8 +1,7 @@
 [package]
-name = "player"
+name = "game"
 version = "0.1.0"
 authors = ["dougfort <doug.fort@gmail.com>"]
 
 [dependencies]
 cards = {path = "../cards" }
-game = {path = "../game" }

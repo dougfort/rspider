@@ -1,3 +1,5 @@
+// cards definitions
+
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum Suit {
     Clubs,

@@ -1,6 +1,7 @@
 extern crate cards;
+extern crate game;
 
 fn main() {
-    let deck = cards::deck();
-    println!("card = {:?}", deck);
+    let game = game::Game::new();
+    println!("game = {:?}", game);
 }
