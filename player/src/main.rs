@@ -3,5 +3,7 @@ extern crate game;
 
 fn main() {
     let game = game::Game::new();
-    println!("game = {:?}", game);
+    for card in game.reserve {
+        println!("card = {}", card);
+    }
 }

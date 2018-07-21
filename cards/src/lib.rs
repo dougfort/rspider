@@ -1,11 +1,25 @@
 // cards definitions
 
+use std::fmt;
+
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum Suit {
     Clubs,
     Diamonds,
     Hearts,
     Spades,
+}
+
+impl fmt::Display for Suit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match self {
+            Suit::Clubs => "C",
+            Suit::Diamonds => "D",
+            Suit::Hearts => "H",
+            Suit::Spades => "S",
+        };
+        write!(f, "{}", s)
+    }
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
@@ -25,10 +39,37 @@ pub enum Rank {
     King,
 }
 
+impl fmt::Display for Rank {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match self {
+            Rank::Ace => " A",
+            Rank::Two => " 2",
+            Rank::Three => " 3",
+            Rank::Four => " 4",
+            Rank::Five => " 5",
+            Rank::Six => " 6",
+            Rank::Seven => " 7",
+            Rank::Eight => " 8",
+            Rank::Nine => " 9",
+            Rank::Ten => "10",
+            Rank::Jack => " J",
+            Rank::Queen => " Q",
+            Rank::King => " K",
+        };
+        write!(f, "{}", s)
+    }
+}
+
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Card {
     pub suit: Suit,
     pub rank: Rank,
+}
+
+impl fmt::Display for Card {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}", self.rank, self.suit)
+    }
 }
 
 pub fn deck() -> Vec<Card> {
@@ -101,7 +142,10 @@ mod tests {
     fn deck() {
         let d = super::deck();
         assert_eq!(d.len(), 52);
-        let ace_of_clubs = super::Card {suit: super::Suit::Clubs, rank: super::Rank::Ace};
+        let ace_of_clubs = super::Card {
+            suit: super::Suit::Clubs,
+            rank: super::Rank::Ace,
+        };
         let mut prev = ace_of_clubs;
         for c in d {
             if c > ace_of_clubs {
