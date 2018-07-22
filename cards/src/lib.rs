@@ -68,7 +68,7 @@ pub struct Card {
 
 impl fmt::Display for Card {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {}", self.rank, self.suit)
+        write!(f, "({} {})", self.rank, self.suit)
     }
 }
 
@@ -100,37 +100,39 @@ pub fn deck() -> Vec<Card> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn card_order() {
         for (c1, c2) in [
             (
                 super::Card {
-                    suit: super::Suit::Clubs,
-                    rank: super::Rank::Two,
+                    suit: Suit::Clubs,
+                    rank: Rank::Two,
                 },
                 super::Card {
-                    suit: super::Suit::Diamonds,
-                    rank: super::Rank::Two,
-                },
-            ),
-            (
-                super::Card {
-                    suit: super::Suit::Clubs,
-                    rank: super::Rank::Queen,
-                },
-                super::Card {
-                    suit: super::Suit::Clubs,
-                    rank: super::Rank::King,
+                    suit: Suit::Diamonds,
+                    rank: Rank::Two,
                 },
             ),
             (
                 super::Card {
-                    suit: super::Suit::Diamonds,
-                    rank: super::Rank::Ace,
+                    suit: Suit::Clubs,
+                    rank: Rank::Queen,
                 },
                 super::Card {
-                    suit: super::Suit::Spades,
-                    rank: super::Rank::Ace,
+                    suit: Suit::Clubs,
+                    rank: Rank::King,
+                },
+            ),
+            (
+                super::Card {
+                    suit: Suit::Diamonds,
+                    rank: Rank::Ace,
+                },
+                super::Card {
+                    suit: Suit::Spades,
+                    rank: Rank::Ace,
                 },
             ),
         ].iter()
@@ -138,13 +140,14 @@ mod tests {
             assert!(c1 < c2);
         }
     }
+
     #[test]
-    fn deck() {
-        let d = super::deck();
+    fn deck_order() {
+        let d = deck();
         assert_eq!(d.len(), 52);
-        let ace_of_clubs = super::Card {
-            suit: super::Suit::Clubs,
-            rank: super::Rank::Ace,
+        let ace_of_clubs = Card {
+            suit: Suit::Clubs,
+            rank: Rank::Ace,
         };
         let mut prev = ace_of_clubs;
         for c in d {
