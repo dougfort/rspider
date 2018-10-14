@@ -8,7 +8,7 @@ use rand::{Rng, thread_rng};
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub struct Column {
     pub cards_in_play: Vec<cards::Card>,
-    pub visible_count: u32,
+    pub visible_count: usize,
 }
 
 #[derive(Debug)]
