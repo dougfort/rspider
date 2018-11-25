@@ -47,7 +47,7 @@ impl Rank {
             Ace => Some(Two),
             Two => Some(Three),
             Three => Some(Four),
-            Four => Some(Five),
+            Four => Some(Five), 
             Five => Some(Six),
             Six => Some(Seven),
             Seven => Some(Eight),

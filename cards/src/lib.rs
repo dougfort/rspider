@@ -18,19 +18,47 @@ impl fmt::Display for Card {
     }
 }
 
-pub fn deck() -> Vec<Card> {
-    use suit::Suit::*;
-    use rank::Rank;
-
-    let mut d = vec![];
-
-    for s in vec![Clubs, Diamonds, Hearts, Spades] {
-        for r in Rank::iter() {
-            d.push(Card { suit: s, rank: r });
+impl Card {
+    pub fn successor(&self) -> Option<Card> {
+        if let Some(r) = rank::Rank::successor(&self.rank) {
+             Some(Card{suit: self.suit, rank: r})
+        } else {
+            if let Some(s) = suit::Suit::successor(&self.suit) {
+                Some(Card{suit: s, rank: rank::Rank::iter().next().unwrap()})
+            } else {
+                None
+            }
         }
     }
+}
 
-    d
+pub struct Iter<Card> {
+    current: Option<Card>
+}
+
+impl Iterator for Iter<Card> {
+    type Item = Card;
+
+    fn next(&mut self) -> Option<Card> {
+        let prev = self.current;
+        if let Some(previous) = prev {
+            self.current = previous.successor();
+            prev
+        } else {
+            None
+        }
+    }
+}
+
+impl Card {
+    pub fn iter() -> Iter<Card> {
+        Iter{
+            current: Some(Card{
+                suit: suit::Suit::iter().next().unwrap(), 
+                rank: rank::Rank::iter().next().unwrap()
+            })
+        }
+    }
 }
 
 #[cfg(test)]
@@ -82,7 +110,7 @@ mod tests {
     fn deck_order() {
         use suit::Suit::*;
         use rank::Rank::*;
-        let d = deck();
+        let d: Vec<Card> = self::Card::iter().collect();
         assert_eq!(d.len(), 52);
         let ace_of_clubs = Card {
             suit: Clubs,

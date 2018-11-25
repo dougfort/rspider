@@ -28,7 +28,7 @@ pub struct Move {
 
 impl Game {
     pub fn new() -> Game {
-        let mut reserve = [cards::deck(), cards::deck()].concat();
+        let mut reserve: Vec<cards::Card> = cards::Card::iter().chain(cards::Card::iter()).collect();
         thread_rng().shuffle(&mut reserve);
         
         let layout = [6, 5, 5, 6, 5, 5, 6, 5, 5, 6].iter().map(|n| {            
