@@ -2,117 +2,14 @@
 
 use std::fmt;
 
-#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
-pub enum Suit {
-    Clubs,
-    Diamonds,
-    Hearts,
-    Spades,
-}
+pub mod suit;
+pub mod rank;
 
-impl fmt::Display for Suit {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let s = match self {
-            Suit::Clubs => "C",
-            Suit::Diamonds => "D",
-            Suit::Hearts => "H",
-            Suit::Spades => "S",
-        };
-        write!(f, "{}", s)
-    }
-}
-
-#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
-pub enum Rank {
-    Ace,
-    Two,
-    Three,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-    Ten,
-    Jack,
-    Queen,
-    King,
-}
-
-impl fmt::Display for Rank {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use ::Rank::*;
-        let s = match self {
-            Ace => " A",
-            Two => " 2",
-            Three => " 3",
-            Four => " 4",
-            Five => " 5",
-            Six => " 6",
-            Seven => " 7",
-            Eight => " 8",
-            Nine => " 9",
-            Ten => "10",
-            Jack => " J",
-            Queen => " Q",
-            King => " K",
-        };
-        write!(f, "{}", s)
-    }
-}
-
-impl Rank {
-    pub fn successor(&self) -> Option<Rank> {
-        use ::Rank::*;
-        let s: Option<Rank>  = match self {
-            Ace => Some(Two),
-            Two => Some(Three),
-            Three => Some(Four),
-            Four => Some(Five),
-            Five => Some(Six),
-            Six => Some(Seven),
-            Seven => Some(Eight),
-            Eight => Some(Nine),
-            Nine => Some(Ten),
-            Ten => Some(Jack),
-            Jack => Some(Queen),
-            Queen => Some(King),
-            King => None,
-        };
-        s
-    }
-}
-
-pub struct Iter<Rank> {
-    current: Option<Rank>
-}
-
-impl Iterator for Iter<Rank> {
-    type Item = Rank;
-
-    fn next(&mut self) -> Option<Rank> {
-        let prev = self.current;
-        if let Some(previous) = prev {
-            self.current = previous.successor();
-            prev
-        } else {
-            None
-        }
-    }
-}
-
-impl Rank {
-    pub fn iter() -> Iter<Rank> {
-        Iter{
-            current: Some(Rank::Ace)
-        }
-    }
-}
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Card {
-    pub suit: Suit,
-    pub rank: Rank,
+    pub suit: suit::Suit,
+    pub rank: rank::Rank,
 }
 
 impl fmt::Display for Card {
@@ -122,7 +19,9 @@ impl fmt::Display for Card {
 }
 
 pub fn deck() -> Vec<Card> {
-    use ::Suit::*;
+    use suit::Suit::*;
+    use rank::Rank;
+
     let mut d = vec![];
 
     for s in vec![Clubs, Diamonds, Hearts, Spades] {
@@ -137,38 +36,40 @@ pub fn deck() -> Vec<Card> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use suit::Suit::*;
+    use rank::Rank::*;
 
     #[test]
     fn card_order() {
         for (c1, c2) in [
             (
                 super::Card {
-                    suit: Suit::Clubs,
-                    rank: Rank::Two,
+                    suit: Clubs,
+                    rank: Two,
                 },
                 super::Card {
-                    suit: Suit::Diamonds,
-                    rank: Rank::Two,
-                },
-            ),
-            (
-                super::Card {
-                    suit: Suit::Clubs,
-                    rank: Rank::Queen,
-                },
-                super::Card {
-                    suit: Suit::Clubs,
-                    rank: Rank::King,
+                    suit: Diamonds,
+                    rank: Two,
                 },
             ),
             (
                 super::Card {
-                    suit: Suit::Diamonds,
-                    rank: Rank::Ace,
+                    suit: Clubs,
+                    rank: Queen,
                 },
                 super::Card {
-                    suit: Suit::Spades,
-                    rank: Rank::Ace,
+                    suit: Clubs,
+                    rank: King,
+                },
+            ),
+            (
+                super::Card {
+                    suit: Diamonds,
+                    rank: Ace,
+                },
+                super::Card {
+                    suit: Spades,
+                    rank: Ace,
                 },
             ),
         ].iter()
@@ -179,11 +80,13 @@ mod tests {
 
     #[test]
     fn deck_order() {
+        use suit::Suit::*;
+        use rank::Rank::*;
         let d = deck();
         assert_eq!(d.len(), 52);
         let ace_of_clubs = Card {
-            suit: Suit::Clubs,
-            rank: Rank::Ace,
+            suit: Clubs,
+            rank: Ace,
         };
         let mut prev = ace_of_clubs;
         for c in d {
