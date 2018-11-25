@@ -41,22 +41,71 @@ pub enum Rank {
 
 impl fmt::Display for Rank {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use ::Rank::*;
         let s = match self {
-            Rank::Ace => " A",
-            Rank::Two => " 2",
-            Rank::Three => " 3",
-            Rank::Four => " 4",
-            Rank::Five => " 5",
-            Rank::Six => " 6",
-            Rank::Seven => " 7",
-            Rank::Eight => " 8",
-            Rank::Nine => " 9",
-            Rank::Ten => "10",
-            Rank::Jack => " J",
-            Rank::Queen => " Q",
-            Rank::King => " K",
+            Ace => " A",
+            Two => " 2",
+            Three => " 3",
+            Four => " 4",
+            Five => " 5",
+            Six => " 6",
+            Seven => " 7",
+            Eight => " 8",
+            Nine => " 9",
+            Ten => "10",
+            Jack => " J",
+            Queen => " Q",
+            King => " K",
         };
         write!(f, "{}", s)
+    }
+}
+
+impl Rank {
+    pub fn successor(&self) -> Option<Rank> {
+        use ::Rank::*;
+        let s: Option<Rank>  = match self {
+            Ace => Some(Two),
+            Two => Some(Three),
+            Three => Some(Four),
+            Four => Some(Five),
+            Five => Some(Six),
+            Six => Some(Seven),
+            Seven => Some(Eight),
+            Eight => Some(Nine),
+            Nine => Some(Ten),
+            Ten => Some(Jack),
+            Jack => Some(Queen),
+            Queen => Some(King),
+            King => None,
+        };
+        s
+    }
+}
+
+pub struct Iter<Rank> {
+    current: Option<Rank>
+}
+
+impl Iterator for Iter<Rank> {
+    type Item = Rank;
+
+    fn next(&mut self) -> Option<Rank> {
+        let prev = self.current;
+        if let Some(previous) = prev {
+            self.current = previous.successor();
+            prev
+        } else {
+            None
+        }
+    }
+}
+
+impl Rank {
+    pub fn iter() -> Iter<Rank> {
+        Iter{
+            current: Some(Rank::Ace)
+        }
     }
 }
 
@@ -73,24 +122,11 @@ impl fmt::Display for Card {
 }
 
 pub fn deck() -> Vec<Card> {
+    use ::Suit::*;
     let mut d = vec![];
 
-    for s in vec![Suit::Clubs, Suit::Diamonds, Suit::Hearts, Suit::Spades] {
-        for r in vec![
-            Rank::Ace,
-            Rank::Two,
-            Rank::Three,
-            Rank::Four,
-            Rank::Five,
-            Rank::Six,
-            Rank::Seven,
-            Rank::Eight,
-            Rank::Nine,
-            Rank::Ten,
-            Rank::Jack,
-            Rank::Queen,
-            Rank::King,
-        ] {
+    for s in vec![Clubs, Diamonds, Hearts, Spades] {
+        for r in Rank::iter() {
             d.push(Card { suit: s, rank: r });
         }
     }
