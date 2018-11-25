@@ -5,6 +5,8 @@ extern crate cards;
 
 use rand::{Rng, thread_rng};
 
+pub mod error;
+
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
 pub struct Column {
     pub cards_in_play: Vec<cards::Card>,
@@ -17,9 +19,16 @@ pub struct Game {
     pub layout: Vec<Column>,
 }
 
+#[derive(Debug, PartialOrd, PartialEq, Clone)]
+pub struct Move {
+    pub orig_col: usize,
+    pub dest_col: usize,
+    pub count: usize,
+}
+
 impl Game {
     pub fn new() -> Game {
-        let mut reserve = [cards::deck(), cards::deck()].concat();
+        let mut reserve: Vec<cards::Card> = cards::Card::iter().chain(cards::Card::iter()).collect();
         thread_rng().shuffle(&mut reserve);
         
         let layout = [6, 5, 5, 6, 5, 5, 6, 5, 5, 6].iter().map(|n| {            
@@ -33,6 +42,31 @@ impl Game {
             reserve: reserve,
             layout: layout,
         }
+    }
+
+    pub fn is_move_valid(&self, m: &Move) -> bool {
+        let orig = &self.layout[m.orig_col];
+        let dest = &self.layout[m.dest_col];
+
+        if m.count == 0 || m.count >= orig.visible_count {
+            return false;
+        }
+        true
+    }
+
+    pub fn possible_moves(&self) -> Result<Vec<Move>, error::GameError> {
+        let mut moves = Vec::new();
+
+        for j in 1..self.layout.len() {
+            for i in 0..j {
+                let orig = &self.layout[i];
+                for n in 0..orig.visible_count {
+                    moves.push(Move{orig_col: i, dest_col: j, count: n+1});
+                }
+            }
+        }
+
+        Ok(moves)
     }
 }
 

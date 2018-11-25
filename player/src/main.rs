@@ -1,8 +1,27 @@
 extern crate cards;
 extern crate game;
 
+use std::io::{stdin, stdout};
+
 fn main() {
-    let game = game::Game::new();
+    let mut game = game::Game::new();
+
+    loop {
+        display_game(&game);
+        display_moves(&game);
+
+        println!("");
+        println!("> ");
+
+        let mut input = String::new();
+        stdin().read_line(&mut input).unwrap();
+
+        let command = input.trim();
+        println!("command = {}", command);
+    }
+}
+
+fn display_game(game: &game::Game) {
     let max_col = game.layout.iter().map(|col| {
         col.cards_in_play.len()
     }).max().unwrap();
@@ -17,4 +36,11 @@ fn main() {
         });
         println!("{}", result);
     };
+}
+
+fn display_moves(game: &game::Game) {
+    let moves = game.possible_moves().unwrap();
+    for m in moves {
+        println!("{:?}", m);
+    }
 }
