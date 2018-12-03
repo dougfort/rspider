@@ -5,7 +5,6 @@ use std::fmt;
 pub mod suit;
 pub mod rank;
 
-
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Card {
     pub suit: suit::Suit,
