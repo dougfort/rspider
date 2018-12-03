@@ -21,13 +21,6 @@ pub struct Move {
     pub count: usize,
 }
 
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
-pub struct Move {
-    pub orig_col: usize,
-    pub dest_col: usize,
-    pub count: usize,
-}
-
 impl Game {
     pub fn new() -> Game {
         let mut reserve: Vec<cards::Card> = cards::Card::iter().chain(cards::Card::iter()).collect();
