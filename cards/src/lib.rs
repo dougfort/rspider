@@ -5,7 +5,6 @@ use std::fmt;
 pub mod suit;
 pub mod rank;
 
-
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Card {
     pub suit: suit::Suit,
@@ -30,6 +29,7 @@ impl Card {
             }
         }
     }
+
 }
 
 pub struct Iter<Card> {
@@ -61,11 +61,100 @@ impl Card {
     }
 }
 
+// is_run returns true if the cards form a sequence: 
+//    all the same suit
+//    rank in ascending order
+// an empty slice is not a run
+// a singleton is a run
+pub fn is_run(cards: &[Card]) -> bool {
+    match cards.len() {
+        0 => false,
+        1 => true,
+        _ => {
+            let mut i = 0;
+            let mut j = 1;
+            while j < cards.len() {
+                if cards[i].suit != cards[j].suit {
+                    return false;
+                };
+                match cards[i].successor() {
+                    Some(s) => {
+                        if cards[j] != s {
+                            return false;
+                        };
+                    },
+                    None => { return false; }
+                };
+                i += 1;
+                j += 1;
+            }
+            true
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use suit::Suit::*;
     use rank::Rank::*;
+
+    #[test]
+    fn runs() {
+        struct RunTestDataType {
+            cards: Vec<Card>,
+            is_run: bool,
+        }
+
+        let run_test_data = vec![
+            RunTestDataType{cards: vec![], is_run: false},
+            RunTestDataType{cards: vec![Card{suit: Clubs, rank: Ace}], is_run: true},
+            RunTestDataType{
+                cards: vec![
+                    Card{suit: Clubs, rank: Ace},
+                    Card{suit: Diamonds, rank: Two},
+                ],
+                is_run: false,
+            },
+            RunTestDataType{
+                cards: vec![
+                    Card{suit: Clubs, rank: Ace},
+                    Card{suit: Clubs, rank: Five},
+                ],
+                is_run: false,
+            },
+            RunTestDataType{
+                cards: vec![
+                    Card{suit: Clubs, rank: Ace},
+                    Card{suit: Clubs, rank: Two},
+                ],
+                is_run: true,
+            },
+            RunTestDataType{
+                cards: vec![
+                    Card{suit: Clubs, rank: Ace},
+                    Card{suit: Clubs, rank: Two},
+                    Card{suit: Clubs, rank: Three},
+                    Card{suit: Clubs, rank: Four},
+                    Card{suit: Clubs, rank: Five},
+                    Card{suit: Clubs, rank: Six},
+                    Card{suit: Clubs, rank: Seven},
+                ],
+                is_run: true,
+            },
+            RunTestDataType{
+                cards: vec![
+                    Card{suit: Diamonds, rank: Queen},
+                    Card{suit: Diamonds, rank: King},
+                ],
+                is_run: true,
+            },
+        ];
+        for td in run_test_data {
+            assert_eq!(is_run(&td.cards), td.is_run)
+        }
+
+    }
 
     #[test]
     fn card_order() {

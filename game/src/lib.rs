@@ -6,17 +6,19 @@ extern crate cards;
 use rand::{Rng, thread_rng};
 
 pub mod error;
-
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
-pub struct Column {
-    pub cards_in_play: Vec<cards::Card>,
-    pub visible_count: usize,
-}
+pub mod column;
 
 #[derive(Debug)]
 pub struct Game {
     pub reserve: Vec<cards::Card>,
-    pub layout: Vec<Column>,
+    pub layout: Vec<column::Column>,
+}
+
+#[derive(Debug, PartialOrd, PartialEq, Clone)]
+pub struct Move {
+    pub orig_col: usize,
+    pub dest_col: usize,
+    pub count: usize,
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
@@ -32,7 +34,7 @@ impl Game {
         thread_rng().shuffle(&mut reserve);
         
         let layout = [6, 5, 5, 6, 5, 5, 6, 5, 5, 6].iter().map(|n| {            
-            Column{
+            column::Column{
                 cards_in_play: reserve.drain(..n).collect(),
                 visible_count: 1,
             }
@@ -48,20 +50,39 @@ impl Game {
         let orig = &self.layout[m.orig_col];
         let dest = &self.layout[m.dest_col];
 
-        if m.count == 0 || m.count >= orig.visible_count {
+        if m.count == 0 || m.count > orig.visible_count {
             return false;
         }
-        true
+
+        match orig.movable_index() {
+            Some(i) => {
+                if cards::is_run(&orig.cards_in_play[i..]) {
+                    match orig.cards_in_play[i].rank.successor() {
+                        Some(s) => s == dest.cards_in_play[dest.cards_in_play.len()-1].rank,
+                        None => false
+                    }
+                } else {
+                    false
+                }
+            },
+            None => false,
+        } 
+
     }
 
     pub fn possible_moves(&self) -> Result<Vec<Move>, error::GameError> {
         let mut moves = Vec::new();
 
-        for j in 1..self.layout.len() {
-            for i in 0..j {
-                let orig = &self.layout[i];
-                for n in 0..orig.visible_count {
-                    moves.push(Move{orig_col: i, dest_col: j, count: n+1});
+        for j in 0..self.layout.len() {
+            for i in 0..self.layout.len() {
+                if i != j {
+                    let orig = &self.layout[i];
+                    for n in 0..orig.visible_count {
+                        let m = Move{orig_col: i, dest_col: j, count: n+1};
+                        if self.is_move_valid(&m) {
+                            moves.push(m);
+                        }
+                    }
                 }
             }
         }
