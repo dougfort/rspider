@@ -1,13 +1,16 @@
+extern crate hex;
 extern crate cards;
 extern crate game;
 
 use std::io::{stdin, stdout};
 
 fn main() {
-    let mut game = game::Game::new();
+    let seed = game::seed::from_hex("0102030405060708090a0b0c0d0e0f10").expect("invalid seed");
+    let mut game = game::Game::from_seed(seed);
 
     loop {
         display_game(&game);
+        println!("");
         display_moves(&game);
 
         println!("");
@@ -22,6 +25,9 @@ fn main() {
 }
 
 fn display_game(game: &game::Game) {
+    println!("");
+    println!("game: {}", hex::encode(game.seed));
+    println!("");
     let max_col = game.layout.iter().map(|col| {
         col.cards_in_play.len()
     }).max().unwrap();
