@@ -3,13 +3,15 @@
 extern crate rand;
 extern crate cards;
 
-use rand::{Rng, thread_rng};
+use rand::{Rng, SeedableRng, XorShiftRng};
 
 pub mod error;
 pub mod column;
+pub mod seed;
 
 #[derive(Debug)]
 pub struct Game {
+    pub seed: [u8; 16],
     pub reserve: Vec<cards::Card>,
     pub layout: Vec<column::Column>,
 }
@@ -21,10 +23,19 @@ pub struct Move {
     pub count: usize,
 }
 
-impl Game {
+impl Game {    
+
+    // create a new game from a randomly generated seed
     pub fn new() -> Game {
+        let seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+        Game::from_seed(seed)
+    }
+
+    // create a new game from a specified seed
+    pub fn from_seed(seed: [u8; 16]) -> Game {
         let mut reserve: Vec<cards::Card> = cards::Card::iter().chain(cards::Card::iter()).collect();
-        thread_rng().shuffle(&mut reserve);
+        let mut rng = XorShiftRng::from_seed(seed);
+        rng.shuffle(&mut reserve);
         
         let layout = [6, 5, 5, 6, 5, 5, 6, 5, 5, 6].iter().map(|n| {            
             column::Column{
@@ -34,6 +45,7 @@ impl Game {
         }).collect();        
     
         Game { 
+            seed: seed,
             reserve: reserve,
             layout: layout,
         }
