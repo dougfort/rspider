@@ -2,10 +2,10 @@ extern crate hex;
 extern crate cards;
 extern crate game;
 
-use std::io::{stdin, stdout};
+use std::io::{stdin};
 
 fn main() {
-    let seed = game::seed::from_hex("0102030405060708090a0b0c0d0e0f10").expect("invalid seed");
+    let seed = game::seed::from_random();
     let mut game = game::Game::from_seed(seed);
 
     loop {
