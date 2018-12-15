@@ -1,29 +1,60 @@
 extern crate hex;
 extern crate cards;
-extern crate game;
+extern crate client;
 
-use std::io::{stdin};
+use std::io::{stdin, stdout};
+use std::io::Write; 
 
 fn main() {
-    let seed = game::seed::from_random();
-    let mut game = game::Game::from_seed(seed);
-
+    let mut client: Option<client::Client> = None;
     loop {
+        /*
         display_game(&game);
         println!("");
         display_moves(&game);
-
+        */
         println!("");
-        println!("> ");
+        print!("> ");
+        stdout().flush().unwrap();
+
 
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap();
 
-        let command = input.trim();
-        println!("command = {}", command);
+        let split_input: Vec<&str> = input.trim().split(' ').collect();
+        match split_input[0].trim() {
+            "" => continue,
+            "quit" => break,
+            "new" => {
+                client = if split_input.len() > 1 {
+                    match client::Client::from_hex(split_input[1]) {
+                        Ok(c) => Some(c),
+                        Err(e) => {
+                            println!("unable to create game from seed: {}, {}", split_input[1], e);
+                            None
+                        }
+                    }
+                } else {
+                    Some(client::Client::new())
+                }
+            }
+            _ => {
+                println!("invalid input");
+                continue;
+            },
+        }
+
+        println!("");
+        match client {
+            None => println!("no game in progress"),
+            Some(c) => {
+                println!("game = {}", c.seed());
+            },
+        }
     }
 }
 
+/*
 fn display_game(game: &game::Game) {
     println!("");
     println!("game: {}", hex::encode(game.seed));
@@ -53,3 +84,5 @@ fn display_moves(game: &game::Game) {
         println!("{:?}", m);
     }
 }
+
+*/
