@@ -28,9 +28,12 @@ fn display_game(game: &game::Game) {
     println!("");
     println!("game: {}", hex::encode(game.seed));
     println!("");
+    println!(" {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+
     let max_col = game.layout.iter().map(|col| {
         col.cards_in_play.len()
     }).max().unwrap();
+
     for y in 0..max_col {
         let result = game.layout.iter().fold("".to_string(), |line, col| {
             let entry = match col.cards_in_play.len() {
