@@ -8,6 +8,7 @@ use rand::{Rng, SeedableRng, XorShiftRng};
 pub mod error;
 pub mod column;
 pub mod seed;
+pub mod delta;
 
 #[derive(Debug)]
 pub struct Game {
@@ -49,6 +50,21 @@ impl Game {
             reserve: reserve,
             layout: layout,
         }
+    }
+
+    pub fn initial_deltas(&self) -> Vec<delta::Delta> {
+        vec![
+            delta::Delta::HiddenCard{index: 0, count: 5},
+            delta::Delta::HiddenCard{index: 1, count: 4},
+            delta::Delta::HiddenCard{index: 2, count: 4},
+            delta::Delta::HiddenCard{index: 3, count: 5},
+            delta::Delta::HiddenCard{index: 4, count: 4},
+            delta::Delta::HiddenCard{index: 5, count: 4},
+            delta::Delta::HiddenCard{index: 6, count: 5},
+            delta::Delta::HiddenCard{index: 7, count: 4},
+            delta::Delta::HiddenCard{index: 8, count: 4},
+            delta::Delta::HiddenCard{index: 9, count: 5},
+        ]
     }
 
     pub fn is_move_valid(&self, m: &Move) -> bool {

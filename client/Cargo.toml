@@ -5,4 +5,5 @@ authors = ["dougfort <doug.fort@gmail.com>"]
 
 [dependencies]
 hex = "0.3.2"
+cards = {path = "../cards" }
 game = {path = "../game" }

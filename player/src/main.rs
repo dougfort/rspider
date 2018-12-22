@@ -26,16 +26,17 @@ fn main() {
             "" => continue,
             "quit" => break,
             "new" => {
-                client = if split_input.len() > 1 {
-                    match client::Client::from_hex(split_input[1]) {
-                        Ok(c) => Some(c),
-                        Err(e) => {
-                            println!("unable to create game from seed: {}, {}", split_input[1], e);
-                            None
-                        }
-                    }
+                let client_result = if split_input.len() > 1 {
+                    client::Client::from_hex(split_input[1])
                 } else {
-                    Some(client::Client::new())
+                    client::Client::new()
+                };
+                client = match client_result {
+                    Ok(c) => Some(c),
+                    Err(e) => {
+                        println!("unable to create client: {}", e);
+                        None
+                    }
                 }
             }
             _ => {
@@ -47,42 +48,41 @@ fn main() {
         println!("");
         match client {
             None => println!("no game in progress"),
-            Some(c) => {
-                println!("game = {}", c.seed());
-            },
+            Some(c) => display_local_game(&c),
         }
     }
 }
 
-/*
-fn display_game(game: &game::Game) {
+fn display_local_game(client: &client::Client) {
     println!("");
-    println!("game: {}", hex::encode(game.seed));
+    println!("game: {}", client.seed());
     println!("");
     println!(" {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
-    let max_col = game.layout.iter().map(|col| {
-        col.cards_in_play.len()
+    let max_col = client.local.iter().map(|col| {
+        col.len()
     }).max().unwrap();
 
     for y in 0..max_col {
-        let result = game.layout.iter().fold("".to_string(), |line, col| {
-            let entry = match col.cards_in_play.len() {
-                len if len > y &&  y >= len - col.visible_count => format!("{}", col.cards_in_play[y]),
-                len if len > y  => format!("(----)"),
-                _ => format!{"          "}
+        let result = client.local.iter().fold("".to_string(), |line, col| {
+            let entry = if y < col.len() {
+                match col[y] {
+                    Some(card) => format!("{}", card),
+                    None => format!("(----)")
+                }
+            } else {
+                format!{"          "}
             };
             format!("{} {:<10}", line, entry)
         });
         println!("{}", result);
     };
 }
-
+/*
 fn display_moves(game: &game::Game) {
     let moves = game.possible_moves().unwrap();
     for m in moves {
         println!("{:?}", m);
     }
 }
-
 */
