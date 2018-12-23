@@ -54,12 +54,14 @@ fn client_from_game(game: game::Game) -> Result<Client, error::ClientError> {
     }
 
     for delta in client.remote.initial_deltas() {
+        use game::delta::Delta::*;
         match delta {
-            game::delta::Delta::HiddenCard{index: i, count: c} => {
+            HiddenCard{index: i, count: c} => {
                 for _ in 0 .. c {
                     client.local[i].push(None);
                 }
-            }
+            },
+            AppendCard{index: i, card: c} => client.local[i].push(Some(c)),
         }
     };
 

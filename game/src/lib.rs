@@ -53,17 +53,28 @@ impl Game {
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {
+        use delta::Delta::*;
         vec![
-            delta::Delta::HiddenCard{index: 0, count: 5},
-            delta::Delta::HiddenCard{index: 1, count: 4},
-            delta::Delta::HiddenCard{index: 2, count: 4},
-            delta::Delta::HiddenCard{index: 3, count: 5},
-            delta::Delta::HiddenCard{index: 4, count: 4},
-            delta::Delta::HiddenCard{index: 5, count: 4},
-            delta::Delta::HiddenCard{index: 6, count: 5},
-            delta::Delta::HiddenCard{index: 7, count: 4},
-            delta::Delta::HiddenCard{index: 8, count: 4},
-            delta::Delta::HiddenCard{index: 9, count: 5},
+            HiddenCard{index: 0, count: 5},
+            AppendCard{index: 0, card: self.layout[0].cards_in_play[5]},
+            HiddenCard{index: 1, count: 4},
+            AppendCard{index: 1, card: self.layout[1].cards_in_play[4]},
+            HiddenCard{index: 2, count: 4},
+            AppendCard{index: 2, card: self.layout[2].cards_in_play[4]},
+            HiddenCard{index: 3, count: 5},
+            AppendCard{index: 3, card: self.layout[3].cards_in_play[5]},
+            HiddenCard{index: 4, count: 4},
+            AppendCard{index: 4, card: self.layout[4].cards_in_play[4]},
+            HiddenCard{index: 5, count: 4},
+            AppendCard{index: 5, card: self.layout[5].cards_in_play[4]},
+            HiddenCard{index: 6, count: 5},
+            AppendCard{index: 6, card: self.layout[6].cards_in_play[5]},
+            HiddenCard{index: 7, count: 4},
+            AppendCard{index: 7, card: self.layout[7].cards_in_play[4]},
+            HiddenCard{index: 8, count: 4},
+            AppendCard{index: 8, card: self.layout[8].cards_in_play[4]},
+            HiddenCard{index: 9, count: 5},
+            AppendCard{index: 9, card: self.layout[9].cards_in_play[5]},
         ]
     }
 
