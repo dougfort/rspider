@@ -8,6 +8,7 @@ use rand::{Rng, SeedableRng, XorShiftRng};
 pub mod error;
 pub mod column;
 pub mod seed;
+pub mod delta;
 
 #[derive(Debug)]
 pub struct Game {
@@ -27,7 +28,7 @@ impl Game {
 
     // create a new game from a randomly generated seed
     pub fn new() -> Game {
-        let seed = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+        let seed = seed::from_random();
         Game::from_seed(seed)
     }
 
@@ -49,6 +50,32 @@ impl Game {
             reserve: reserve,
             layout: layout,
         }
+    }
+
+    pub fn initial_deltas(&self) -> Vec<delta::Delta> {
+        use delta::Delta::*;
+        vec![
+            HiddenCard{index: 0, count: 5},
+            AppendCard{index: 0, card: self.layout[0].cards_in_play[5]},
+            HiddenCard{index: 1, count: 4},
+            AppendCard{index: 1, card: self.layout[1].cards_in_play[4]},
+            HiddenCard{index: 2, count: 4},
+            AppendCard{index: 2, card: self.layout[2].cards_in_play[4]},
+            HiddenCard{index: 3, count: 5},
+            AppendCard{index: 3, card: self.layout[3].cards_in_play[5]},
+            HiddenCard{index: 4, count: 4},
+            AppendCard{index: 4, card: self.layout[4].cards_in_play[4]},
+            HiddenCard{index: 5, count: 4},
+            AppendCard{index: 5, card: self.layout[5].cards_in_play[4]},
+            HiddenCard{index: 6, count: 5},
+            AppendCard{index: 6, card: self.layout[6].cards_in_play[5]},
+            HiddenCard{index: 7, count: 4},
+            AppendCard{index: 7, card: self.layout[7].cards_in_play[4]},
+            HiddenCard{index: 8, count: 4},
+            AppendCard{index: 8, card: self.layout[8].cards_in_play[4]},
+            HiddenCard{index: 9, count: 5},
+            AppendCard{index: 9, card: self.layout[9].cards_in_play[5]},
+        ]
     }
 
     pub fn is_move_valid(&self, m: &Move) -> bool {

@@ -1,9 +1,9 @@
 [package]
-name = "player"
+name = "client"
 version = "0.1.0"
 authors = ["dougfort <doug.fort@gmail.com>"]
 
 [dependencies]
 hex = "0.3.2"
 cards = {path = "../cards" }
-client = {path = "../client" }
+game = {path = "../game" }
