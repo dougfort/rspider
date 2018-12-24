@@ -24,6 +24,12 @@ pub struct Move {
     pub count: usize,
 }
 
+const WIDTH: usize = 10;
+
+fn initial_counts() -> [usize; WIDTH] {
+    [6, 5, 5, 6, 5, 5, 6, 5, 5, 6]
+}
+
 impl Game {    
 
     // create a new game from a randomly generated seed
@@ -38,7 +44,7 @@ impl Game {
         let mut rng = XorShiftRng::from_seed(seed);
         rng.shuffle(&mut reserve);
         
-        let layout = [6, 5, 5, 6, 5, 5, 6, 5, 5, 6].iter().map(|n| {            
+        let layout = initial_counts().iter().map(|n| {            
             column::Column{
                 cards_in_play: reserve.drain(..n).collect(),
                 visible_count: 1,
@@ -54,28 +60,12 @@ impl Game {
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {
         use delta::Delta::*;
-        vec![
-            HiddenCard{index: 0, count: 5},
-            AppendCard{index: 0, card: self.layout[0].cards_in_play[5]},
-            HiddenCard{index: 1, count: 4},
-            AppendCard{index: 1, card: self.layout[1].cards_in_play[4]},
-            HiddenCard{index: 2, count: 4},
-            AppendCard{index: 2, card: self.layout[2].cards_in_play[4]},
-            HiddenCard{index: 3, count: 5},
-            AppendCard{index: 3, card: self.layout[3].cards_in_play[5]},
-            HiddenCard{index: 4, count: 4},
-            AppendCard{index: 4, card: self.layout[4].cards_in_play[4]},
-            HiddenCard{index: 5, count: 4},
-            AppendCard{index: 5, card: self.layout[5].cards_in_play[4]},
-            HiddenCard{index: 6, count: 5},
-            AppendCard{index: 6, card: self.layout[6].cards_in_play[5]},
-            HiddenCard{index: 7, count: 4},
-            AppendCard{index: 7, card: self.layout[7].cards_in_play[4]},
-            HiddenCard{index: 8, count: 4},
-            AppendCard{index: 8, card: self.layout[8].cards_in_play[4]},
-            HiddenCard{index: 9, count: 5},
-            AppendCard{index: 9, card: self.layout[9].cards_in_play[5]},
-        ]
+        let mut deltas: Vec<delta::Delta> = Vec::new();
+        for (i, c) in (0..WIDTH).zip(initial_counts().iter()) {
+            deltas.push(HiddenCard{index: i, count: *c-1});
+            deltas.push(AppendCard{index: i, card: self.layout[i].cards_in_play[*c-1]});
+        }
+        deltas
     }
 
     pub fn is_move_valid(&self, m: &Move) -> bool {
