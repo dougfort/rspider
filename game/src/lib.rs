@@ -14,7 +14,7 @@ pub mod delta;
 pub struct Game {
     pub seed: [u8; 16],
     pub reserve: Vec<cards::Card>,
-    pub layout: Vec<column::Column>,
+    pub columns: Vec<Vec<column::ColumnCard>>,
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
@@ -44,30 +44,49 @@ impl Game {
         let mut rng = XorShiftRng::from_seed(seed);
         rng.shuffle(&mut reserve);
         
-        let layout = initial_counts().iter().map(|n| {            
-            column::Column{
-                cards_in_play: reserve.drain(..n).collect(),
-                visible_count: 1,
+        let mut columns: Vec<Vec<column::ColumnCard>> = Vec::new();
+        {
+            let mut ri = reserve.iter();
+            for c in initial_counts().iter() {
+                let mut column: Vec<column::ColumnCard> = Vec::new();
+                for _ in 0..*c-1 {
+                    let card = ri.next().unwrap();
+                    let wrapped_card = column::ColumnCard::Hidden{card: *card}; 
+                    column.push(wrapped_card);
+                }
+                let card = ri.next().unwrap();
+                let wrapped_card = column::ColumnCard::Visible{card: *card}; 
+                column.push(wrapped_card);
+                columns.push(column);
             }
-        }).collect();        
+        }
     
         Game { 
             seed: seed,
             reserve: reserve,
-            layout: layout,
+            columns: columns,
         }
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {
         use delta::Delta::*;
         let mut deltas: Vec<delta::Delta> = Vec::new();
-        for (i, c) in (0..WIDTH).zip(initial_counts().iter()) {
-            deltas.push(HiddenCard{index: i, count: *c-1});
-            deltas.push(AppendCard{index: i, card: self.layout[i].cards_in_play[*c-1]});
+        for i in 0..WIDTH {
+            for column_card in self.columns[i].iter() {
+                match column_card {
+                    column::ColumnCard::Hidden{card: _} => {
+                        deltas.push(HiddenCard{index: i})
+                    },
+                    column::ColumnCard::Visible{card: c} => {
+                        deltas.push(AppendCard{index: i, card: *c})
+                    },
+                }
+            }
         }
         deltas
     }
-
+}
+/*
     pub fn is_move_valid(&self, m: &Move) -> bool {
         let orig = &self.layout[m.orig_col];
         let dest = &self.layout[m.dest_col];
@@ -130,3 +149,4 @@ mod tests {
         assert_eq!(g.reserve.len(), deck_size - x_layout_size);
     }
 }
+*/

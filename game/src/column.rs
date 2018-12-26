@@ -1,22 +1,21 @@
 extern crate cards;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
-pub struct Column {
-    pub cards_in_play: Vec<cards::Card>,
-    pub visible_count: usize,
+pub enum ColumnCard {
+    Visible{card: cards::Card},
+    Hidden{card: cards::Card},
 }
 
+/*    
 impl Column {
     pub fn movable_index(&self) -> Option<usize> {
-        match (self.visible_count, self.cards_in_play.len()) {
-            (_, 0) => None,
-            (0, _) => None,
-            (1, _) => Some(self.cards_in_play.len()-1),
-            (v, l) if v > l => None,
-            (v, l) => {
-                let mut j = l-1;
-                let mut i = l-2;
-                while (l - i) < v {
+        match self.cards_in_play.len() {
+            0 => None,
+            1 => Some(self.cards_in_play.len()-1),
+            len => {
+                let mut j = len-1;
+                let mut i = len-2;
+                while (len - i) < v {
                     if let Some(s) = self.cards_in_play[j].successor() {
                         if s != self.cards_in_play[i] {
                             break;
@@ -32,7 +31,8 @@ impl Column {
         }
     }
 }
-
+*/
+/*
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -129,3 +129,4 @@ mod tests {
         }
     }
 }
+*/
