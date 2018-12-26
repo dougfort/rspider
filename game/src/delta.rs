@@ -1,4 +1,4 @@
 pub enum Delta {
-    HiddenCard {index: usize, count: usize},
+    HiddenCard {index: usize},
     AppendCard {index: usize, card: cards::Card},
 }
