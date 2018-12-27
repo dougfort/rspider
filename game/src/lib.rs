@@ -3,17 +3,15 @@
 extern crate rand;
 extern crate cards;
 
-use rand::{Rng, SeedableRng, XorShiftRng};
-
 pub mod error;
 pub mod column;
 pub mod seed;
+pub mod source;
 pub mod delta;
 
 #[derive(Debug)]
 pub struct Game {
-    pub seed: [u8; 16],
-    pub reserve: Vec<cards::Card>,
+    pub source: source::Source,
     pub columns: Vec<Vec<column::ColumnCard>>,
 }
 
@@ -34,19 +32,18 @@ impl Game {
 
     // create a new game from a randomly generated seed
     pub fn new() -> Game {
-        let seed = seed::from_random();
-        Game::from_seed(seed)
+        Game::from_source(source::Source::new())
     }
 
     // create a new game from a specified seed
     pub fn from_seed(seed: [u8; 16]) -> Game {
-        let mut reserve: Vec<cards::Card> = cards::Card::iter().chain(cards::Card::iter()).collect();
-        let mut rng = XorShiftRng::from_seed(seed);
-        rng.shuffle(&mut reserve);
-        
+        Game::from_source(source::Source::from_seed(seed))
+    }
+
+    pub fn from_source(source: source::Source) -> Game {
         let mut columns: Vec<Vec<column::ColumnCard>> = Vec::new();
         {
-            let mut ri = reserve.iter();
+            let mut ri = source.cards.iter();
             for c in initial_counts().iter() {
                 let mut column: Vec<column::ColumnCard> = Vec::new();
                 for _ in 0..*c-1 {
@@ -62,10 +59,14 @@ impl Game {
         }
     
         Game { 
-            seed: seed,
-            reserve: reserve,
+            source: source,
             columns: columns,
         }
+
+    }
+
+    pub fn seed(&self) -> [u8; 16] {
+        self.source.seed
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {

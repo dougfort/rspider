@@ -38,7 +38,7 @@ impl Client {
      }
 
     pub fn seed(&self) -> String {
-        hex::encode(self.remote.seed)
+        hex::encode(self.remote.seed())
     }
 
 } 
