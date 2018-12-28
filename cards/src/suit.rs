@@ -20,17 +20,22 @@ impl fmt::Display for Suit {
     }
 }
 
-impl Suit {
-    pub fn successor(&self) -> Option<Suit> {
-        use self::Suit::*;
-        let s: Option<Suit>  = match self {
-            Clubs => Some(Diamonds),
-            Diamonds => Some(Hearts),
-            Hearts => Some(Spades),
-            Spades => None,
-        };
-        s
+pub fn successor(s: Suit) -> Option<Suit> {
+    use self::Suit::*;
+    match s {
+        Clubs => Some(Diamonds),
+        Diamonds => Some(Hearts),
+        Hearts => Some(Spades),
+        Spades => None,
     }
+}
+
+pub fn first() -> Suit {
+    Suit::Clubs
+}
+
+pub fn iter() -> Iter<Suit> {
+    Iter{current: Some(first())}
 }
 
 pub struct Iter<Suit> {
@@ -43,18 +48,10 @@ impl Iterator for Iter<Suit> {
     fn next(&mut self) -> Option<Suit> {
         let prev = self.current;
         if let Some(previous) = prev {
-            self.current = previous.successor();
+            self.current = successor(previous);
             prev
         } else {
             None
-        }
-    }
-}
-
-impl Suit {
-    pub fn iter() -> Iter<Suit> {
-        Iter{
-            current: Some(Suit::Clubs)
         }
     }
 }

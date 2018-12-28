@@ -17,19 +17,16 @@ impl fmt::Display for Card {
     }
 }
 
-impl Card {
-    pub fn successor(&self) -> Option<Card> {
-        if let Some(r) = rank::Rank::successor(&self.rank) {
-             Some(Card{suit: self.suit, rank: r})
+pub fn successor(c: Card) -> Option<Card> {
+    if let Some(r) = rank::successor(c.rank) {
+            Some(Card{suit: c.suit, rank: r})
+    } else {
+        if let Some(s) = suit::successor(c.suit) {
+            Some(Card{suit: s, rank: rank::first()})
         } else {
-            if let Some(s) = suit::Suit::successor(&self.suit) {
-                Some(Card{suit: s, rank: rank::Rank::iter().next().unwrap()})
-            } else {
-                None
-            }
+            None
         }
     }
-
 }
 
 pub struct Iter<Card> {
@@ -42,7 +39,7 @@ impl Iterator for Iter<Card> {
     fn next(&mut self) -> Option<Card> {
         let prev = self.current;
         if let Some(previous) = prev {
-            self.current = previous.successor();
+            self.current = successor(previous);
             prev
         } else {
             None
@@ -52,12 +49,7 @@ impl Iterator for Iter<Card> {
 
 impl Card {
     pub fn iter() -> Iter<Card> {
-        Iter{
-            current: Some(Card{
-                suit: suit::Suit::iter().next().unwrap(), 
-                rank: rank::Rank::iter().next().unwrap()
-            })
-        }
+        Iter{current: Some(Card{suit: suit::first(), rank: rank::first()})}
     }
 }
 
@@ -77,7 +69,7 @@ pub fn is_run(cards: &[Card]) -> bool {
                 if cards[i].suit != cards[j].suit {
                     return false;
                 };
-                match cards[i].successor() {
+                match successor(cards[i]) {
                     Some(s) => {
                         if cards[j] != s {
                             return false;

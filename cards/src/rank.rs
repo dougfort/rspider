@@ -40,30 +40,37 @@ impl fmt::Display for Rank {
     }
 }
 
-impl Rank {
-    pub fn successor(&self) -> Option<Rank> {
-        use self::Rank::*;
-        let s: Option<Rank>  = match self {
-            Ace => Some(Two),
-            Two => Some(Three),
-            Three => Some(Four),
-            Four => Some(Five), 
-            Five => Some(Six),
-            Six => Some(Seven),
-            Seven => Some(Eight),
-            Eight => Some(Nine),
-            Nine => Some(Ten),
-            Ten => Some(Jack),
-            Jack => Some(Queen),
-            Queen => Some(King),
-            King => None,
-        };
-        s
+pub fn successor(r: Rank) -> Option<Rank> {
+    use self::Rank::*;
+    match r {
+        Ace => Some(Two),
+        Two => Some(Three),
+        Three => Some(Four),
+        Four => Some(Five), 
+        Five => Some(Six),
+        Six => Some(Seven),
+        Seven => Some(Eight),
+        Eight => Some(Nine),
+        Nine => Some(Ten),
+        Ten => Some(Jack),
+        Jack => Some(Queen),
+        Queen => Some(King),
+        King => None,
     }
+}
+
+pub fn first() -> Rank {
+    Rank::Ace
 }
 
 pub struct Iter<Rank> {
     current: Option<Rank>
+}
+
+pub fn iter() -> Iter<Rank> {
+    Iter{
+        current: Some(first())
+    }
 }
 
 impl Iterator for Iter<Rank> {
@@ -72,18 +79,10 @@ impl Iterator for Iter<Rank> {
     fn next(&mut self) -> Option<Rank> {
         let prev = self.current;
         if let Some(previous) = prev {
-            self.current = previous.successor();
+            self.current = successor(previous);
             prev
         } else {
             None
-        }
-    }
-}
-
-impl Rank {
-    pub fn iter() -> Iter<Rank> {
-        Iter{
-            current: Some(Rank::Ace)
         }
     }
 }
