@@ -1,11 +1,11 @@
-use std;
 use std::fmt;
+use std::error::Error;
 
 #[derive(Debug, Clone)]
 pub struct GameError {
     pub message: String,
-    pub line: usize,
-    pub column: usize,    
+    pub line: u32,
+    pub column: u32,    
 }
 
 impl fmt::Display for GameError {
@@ -14,8 +14,12 @@ impl fmt::Display for GameError {
     }
 }
 
-impl std::error::Error for GameError {
+impl Error for GameError {
     fn description(&self) -> &str {
-        &self.message
+        self.message.as_str()
+    }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        Some(self)
     }
 }
