@@ -2,11 +2,12 @@ extern crate hex;
 extern crate game;
 extern crate cards;
 
+use std::error::Error;
+
 pub mod error;
 
 const WIDTH: usize = 10;
 type Column = Vec<Option<cards::Card>>;
-
 
 #[derive(Debug)]
 pub struct Client {
@@ -15,25 +16,14 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new() -> Result<Client, error::ClientError> {
-        client_from_game(game::Game::new())
+    pub fn new() -> Result<Client, Box<Error>> {
+        client_from_game(game::Game::new()?)
     }
 
-    pub fn from_hex(hex_seed: &str) -> Result<Client, error::ClientError> {
-        let seed = match game::seed::from_hex(hex_seed) {
-            Err(err) => {
-                return Err(
-                    error::ClientError{
-                        message: format!("invalid seed string: {}", err).to_string(),
-                        line: line!() as usize,
-                        column: column!() as usize
-                    }
-                )
-            },
-            Ok(s) => s
-        };
+    pub fn from_hex(hex_seed: &str) -> Result<Client, Box<Error>> {
+        let seed = game::seed::from_hex(hex_seed)?;
 
-        let game = game::Game::from_seed(seed);
+        let game = game::Game::from_seed(seed)?;
         client_from_game(game)
      }
 
@@ -43,7 +33,7 @@ impl Client {
 
 } 
 
-fn client_from_game(game: game::Game) -> Result<Client, error::ClientError> {
+fn client_from_game(game: game::Game) -> Result<Client, Box<Error>> {
     let mut client = Client{
         remote: game,
         local: Vec::new(),

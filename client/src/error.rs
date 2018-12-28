@@ -1,5 +1,6 @@
-use std;
 use std::fmt;
+use std::error::Error;
+
 
 #[derive(Debug, Clone)]
 pub struct ClientError {
@@ -14,8 +15,12 @@ impl fmt::Display for ClientError {
     }
 }
 
-impl std::error::Error for ClientError {
+impl Error for ClientError {
     fn description(&self) -> &str {
         &self.message
+    }
+
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        Some(self)
     }
 }

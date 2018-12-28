@@ -3,6 +3,8 @@
 extern crate rand;
 extern crate cards;
 
+use std::error::Error;
+
 pub mod error;
 pub mod column;
 pub mod seed;
@@ -31,42 +33,36 @@ fn initial_counts() -> [usize; WIDTH] {
 impl Game {    
 
     // create a new game from a randomly generated seed
-    pub fn new() -> Game {
+    pub fn new() -> Result<Game, Box<Error>> {
         Game::from_source(source::Source::new())
     }
 
     // create a new game from a specified seed
-    pub fn from_seed(seed: [u8; 16]) -> Game {
+    pub fn from_seed(seed: [u8; 16]) -> Result<Game, Box<Error>> {
         Game::from_source(source::Source::from_seed(seed))
     }
 
-    pub fn from_source(source: source::Source) -> Game {
+    pub fn from_source(mut source: source::Source) -> Result<Game, Box<Error>> {
         let mut columns: Vec<Vec<column::ColumnCard>> = Vec::new();
         {
-            let mut ri = source.cards.iter();
             for c in initial_counts().iter() {
                 let mut column: Vec<column::ColumnCard> = Vec::new();
                 for _ in 0..*c-1 {
-                    let card = ri.next().unwrap();
-                    let wrapped_card = column::ColumnCard::Hidden{card: *card}; 
+                    let wrapped_card = column::ColumnCard::Hidden{card: source.deal()?}; 
                     column.push(wrapped_card);
                 }
-                let card = ri.next().unwrap();
-                let wrapped_card = column::ColumnCard::Visible{card: *card}; 
+                let wrapped_card = column::ColumnCard::Visible{card: source.deal()?}; 
                 column.push(wrapped_card);
                 columns.push(column);
             }
         }
     
-        Game { 
-            source: source,
-            columns: columns,
-        }
+        Ok(Game{source: source, columns: columns})
 
     }
 
     pub fn seed(&self) -> [u8; 16] {
-        self.source.seed
+        self.source.seed()
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {
