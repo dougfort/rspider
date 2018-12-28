@@ -13,7 +13,7 @@ pub mod delta;
 
 #[derive(Debug)]
 pub struct Game {
-    pub source: source::Source,
+    source: source::Source,
     pub columns: Vec<Vec<column::ColumnCard>>,
 }
 
@@ -63,6 +63,10 @@ impl Game {
 
     pub fn seed(&self) -> [u8; 16] {
         self.source.seed()
+    }
+
+    pub fn cards_dealt(&self) -> usize {
+        self.source.cards_dealt()
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {

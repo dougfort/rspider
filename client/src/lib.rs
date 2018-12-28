@@ -31,6 +31,10 @@ impl Client {
         hex::encode(self.remote.seed())
     }
 
+    pub fn cards_dealt(&self) -> usize {
+        self.remote.cards_dealt()
+    }
+
 } 
 
 fn client_from_game(game: game::Game) -> Result<Client, Box<Error>> {

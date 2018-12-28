@@ -49,7 +49,7 @@ impl Source {
     }
 
     // number_of_cards dealt is used for rewind
-    pub fn number_of_cards_dealt(self) -> usize {
+    pub fn cards_dealt(&self) -> usize {
         self.next_card
     }
 

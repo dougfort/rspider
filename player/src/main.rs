@@ -8,15 +8,9 @@ use std::io::Write;
 fn main() {
     let mut client: Option<client::Client> = None;
     loop {
-        /*
-        display_game(&game);
-        println!("");
-        display_moves(&game);
-        */
         println!("");
         print!("> ");
         stdout().flush().unwrap();
-
 
         let mut input = String::new();
         stdin().read_line(&mut input).unwrap();
@@ -55,8 +49,8 @@ fn main() {
 
 fn display_local_game(client: &client::Client) {
     println!("");
-    println!("game: {}", client.seed());
-    println!("");
+    println!("game: {}; cards dealt: {}", client.seed(), client.cards_dealt());
+    println!("");    println!("");
     println!(" {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
     let max_col = client.local.iter().map(|col| {
