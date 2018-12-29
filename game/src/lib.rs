@@ -42,19 +42,17 @@ impl Game {
         Game::from_source(source::Source::from_seed(seed))
     }
 
-    pub fn from_source(mut source: source::Source) -> Result<Game, Box<Error>> {
+    fn from_source(mut source: source::Source) -> Result<Game, Box<Error>> {
         let mut columns: Vec<Vec<column::ColumnCard>> = Vec::new();
-        {
-            for c in initial_counts().iter() {
-                let mut column: Vec<column::ColumnCard> = Vec::new();
-                for _ in 0..*c-1 {
-                    let wrapped_card = column::ColumnCard::Hidden{card: source.deal()?}; 
-                    column.push(wrapped_card);
-                }
-                let wrapped_card = column::ColumnCard::Visible{card: source.deal()?}; 
+        for c in initial_counts().iter() {
+            let mut column: Vec<column::ColumnCard> = Vec::new();
+            for _ in 0..*c-1 {
+                let wrapped_card = column::ColumnCard::Hidden{card: source.deal()?}; 
                 column.push(wrapped_card);
-                columns.push(column);
             }
+            let wrapped_card = column::ColumnCard::Visible{card: source.deal()?}; 
+            column.push(wrapped_card);
+            columns.push(column);
         }
     
         Ok(Game{source: source, columns: columns})
@@ -88,6 +86,33 @@ impl Game {
             }
         }
         deltas
+    }
+
+    pub fn deal(&mut self) -> Result<Vec<delta::Delta>, error::GameError> {
+        use delta::Delta::*;
+        let mut deltas: Vec<delta::Delta> = Vec::new();
+
+        // check all the columns first, then we don't have to revert 
+        // anything on error
+        for i in 0..WIDTH {
+            if self.columns[i].is_empty() {
+                return Err(
+                    error::GameError{
+                        message: "invalid deal to empty column".to_string(),
+                        line: line!(),
+                        column: column!(),
+                    }
+                );
+            }
+        };
+
+        for i in 0..WIDTH {
+            let card = self.source.deal()?;
+            self.columns[1].push(column::ColumnCard::Visible{card: card});
+            deltas.push(AppendCard{index: i, card: card});
+        };
+
+        Ok(deltas)
     }
 }
 /*

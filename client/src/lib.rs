@@ -39,6 +39,26 @@ impl Client {
         self.remote.cards_dealt()
     }
 
+    pub fn deal(&mut self) -> std::result::Result<(), Box<Error>> {
+        for delta in self.remote.deal()? {
+            use game::delta::Delta::*;
+            match delta {
+                AppendCard{index: i, card: c} => self.local[i].push(Some(c)),
+                _ => {
+                    return Err(
+                        error::ClientError{
+                            message: format!("unknown delta {:?}", delta),
+                            line: line!(),
+                            column: column!(),
+                        }.into()
+                    );
+                }
+            }
+        }
+
+        Ok(())
+    }
+
 } 
 
 fn client_from_game(game: game::Game) -> Result<Client, Box<Error>> {

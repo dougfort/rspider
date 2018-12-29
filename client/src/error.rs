@@ -5,8 +5,8 @@ use std::error::Error;
 #[derive(Debug, Clone)]
 pub struct ClientError {
     pub message: String,
-    pub line: usize,
-    pub column: usize,    
+    pub line: u32,
+    pub column: u32,    
 }
 
 impl fmt::Display for ClientError {
