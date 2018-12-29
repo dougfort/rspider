@@ -6,15 +6,15 @@ use std::error::Error;
 use std::io::{stdin, stdout};
 use std::io::Write; 
 
-fn main() {
+fn main() -> Result<(), Box<Error>> {
+    let client = match std::env::args().skip(1).next() {
+        Some(seed) => client::Client::from_hex(&seed)?,
+        None => client::Client::new()?
+    };
     loop {
-        let stdin_line = match get_stdin_line(">") {
-            Err(e) => {
-                println!("ERROR: get_stdin_line{:?}", e);
-                continue;
-            },
-            Ok(c) => c,
-        };
+        display_local_game(&client);
+
+        let stdin_line = get_stdin_line(">")?;
         let command: Vec<&str> = stdin_line.trim().split_whitespace().collect();   
         if command.is_empty() {
             continue;
@@ -22,69 +22,26 @@ fn main() {
         match command[0].trim() {
             "" => continue,
             "quit" => break,
-            "new" => {
-                match client_loop(&command[1..]) {
-                    Err(e) => {
-                        println!("ERROR: client loop{:?}", e);
-                    },
-                    Ok(()) => {},
-                }
-            },
             _ => {
                 println!("invalid input");
                 continue;
             },
         }
     }
+
+    Ok(())
 }
 
 fn get_stdin_line(prompt: &str) -> std::io::Result<String> {
     println!("");
-    println!("{} ", prompt);
+    print!("{} ", prompt);
     stdout().flush()?;
 
     let mut input = String::new();
     stdin().read_line(&mut input)?;
 
     Ok(input)
-}
- 
-fn client_loop(client_params: &[&str]) -> Result<(), Box<Error>> {
-    let client = if client_params.len() > 1 {
-        client::Client::from_hex(client_params[1])?
-    } else {
-        client::Client::new()?
-    };
-
-    loop {
-        display_local_game(&client);
-
-        let stdin_line = match get_stdin_line(">>") {
-            Err(e) => {
-                println!("ERROR: get_stdin_line{:?}", e);
-                continue;
-            },
-            Ok(c) => c,
-        };
-        let command: Vec<&str> = stdin_line.trim().split_whitespace().collect();   
-        if command.is_empty() {
-            continue;
-        }
-        if command.is_empty() {
-            continue;
-        }
-        match command[0].trim() {
-            "" => continue,
-            "quit" => break,
-            _ => {
-                println!("invalid input");
-                continue;
-            },
-        }
-   }
-
-    Ok(())
-}
+} 
 
 fn display_local_game(client: &client::Client) {
     println!("");
@@ -111,11 +68,3 @@ fn display_local_game(client: &client::Client) {
         println!("{}", result);
     };
 }
-/*
-fn display_moves(game: &game::Game) {
-    let moves = game.possible_moves().unwrap();
-    for m in moves {
-        println!("{:?}", m);
-    }
-}
-*/
