@@ -48,6 +48,10 @@ impl Source {
         }
     }
 
+    pub fn total_cards(&self) -> usize {
+        self.cards.len()
+    }
+
     // number_of_cards dealt is used for rewind
     pub fn cards_dealt(&self) -> usize {
         self.next_card

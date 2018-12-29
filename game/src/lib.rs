@@ -65,6 +65,9 @@ impl Game {
         self.source.seed()
     }
 
+    pub fn total_cards(&self) -> usize {
+        self.source.total_cards()
+    }
     pub fn cards_dealt(&self) -> usize {
         self.source.cards_dealt()
     }
