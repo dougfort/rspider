@@ -27,6 +27,18 @@ fn main() -> Result<(), Box<Error>> {
                     client.deal()?;
                 };
             },
+            "checkpoints" => {
+                for cp in client.checkpoints() {
+                    println!("{:?}", cp);
+                }
+            }
+            "undo" => {
+                if client.checkpoints().len() < 2 {
+                    println!("nothing to undo");
+                    continue;
+                };
+                client.undo()?;
+            }
             _ => {
                 println!("invalid input");
                 continue;
