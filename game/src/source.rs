@@ -1,6 +1,7 @@
 extern crate cards;
 
 use rand::{Rng, SeedableRng, XorShiftRng};
+use std::error::Error;
 
 use seed;
 use error;
@@ -8,7 +9,7 @@ use error;
 #[derive(Debug)]
 pub struct Source {
     seed: [u8; 16],
-    cards: Vec<cards::Card>,   // TODO: hide cards
+    cards: Vec<cards::Card>, 
     next_card: usize,
 }
 
@@ -59,15 +60,14 @@ impl Source {
 
     // rewind resets the internal index back to the point where the number of
     // cards dealt was n.
-    // this should be used in conjunction with reverting the cards array 
-    fn rewind(&mut self, n: usize) -> Result<(), error::GameError> {
+    pub fn rewind(&mut self, n: usize) -> Result<(), Box<Error>> {
         if n > self.next_card {
             Err(
                 error::GameError{
                     message: "rewind into the future".to_string(),
                     line: line!(),
                     column: column!(),
-                }
+                }.into()
             )
         } else {
             self.next_card = n;

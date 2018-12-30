@@ -4,6 +4,8 @@ extern crate cards;
 
 use std::error::Error;
 
+use game::delta::Delta;
+
 pub mod error;
 
 const WIDTH: usize = 10;
@@ -25,7 +27,7 @@ impl Client {
 
         let game = game::Game::from_seed(seed)?;
         client_from_game(game)
-     }
+    }
 
     pub fn seed(&self) -> String {
         hex::encode(self.remote.seed())
@@ -37,6 +39,10 @@ impl Client {
 
     pub fn cards_dealt(&self) -> usize {
         self.remote.cards_dealt()
+    }
+
+    pub fn checkpoints(&self) -> Vec<game::Checkpoint> {
+        self.remote.checkpoints()
     }
 
     pub fn deal(&mut self) -> std::result::Result<(), Box<Error>> {
@@ -59,6 +65,24 @@ impl Client {
         Ok(())
     }
 
+    pub fn undo(&mut self) -> Result<(), Box<Error>> {
+        let deltas = self.remote.undo()?;
+        self.apply_deltas(deltas)?;        
+        Ok(())
+    }
+
+    fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Box<Error>> {
+        for delta in deltas {
+            match delta {
+                Delta::HiddenCard{index: i} => self.local[i].push(None),
+                Delta::AppendCard{index: i, card: c} => self.local[i].push(Some(c)),
+                Delta::PopCard{index: i} => { self.local[i].pop(); },
+            }
+        };
+
+        Ok(())
+    }
+
 } 
 
 fn client_from_game(game: game::Game) -> Result<Client, Box<Error>> {
@@ -71,13 +95,10 @@ fn client_from_game(game: game::Game) -> Result<Client, Box<Error>> {
         client.local.push(Vec::new());
     }
 
-    for delta in client.remote.initial_deltas() {
-        use game::delta::Delta::*;
-        match delta {
-            HiddenCard{index: i} => client.local[i].push(None),
-            AppendCard{index: i, card: c} => client.local[i].push(Some(c)),
-        }
-    };
+    let deltas = client.remote.initial_deltas();
+
+    client.apply_deltas(deltas)?;
 
     Ok(client)
 }
+

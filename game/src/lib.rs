@@ -4,6 +4,7 @@ extern crate rand;
 extern crate cards;
 
 use std::error::Error;
+use delta::Delta;
 
 pub mod error;
 pub mod column;
@@ -11,10 +12,17 @@ pub mod seed;
 pub mod source;
 pub mod delta;
 
+#[derive(Debug, Clone)]
+pub enum Checkpoint {
+    Start{count: usize},
+    Deal{count: usize},
+}
+
 #[derive(Debug)]
 pub struct Game {
     source: source::Source,
-    pub columns: Vec<Vec<column::ColumnCard>>,
+    columns: Vec<Vec<column::ColumnCard>>,
+    checkpoints: Vec<Checkpoint>,
 }
 
 #[derive(Debug, PartialOrd, PartialEq, Clone)]
@@ -43,6 +51,8 @@ impl Game {
     }
 
     fn from_source(mut source: source::Source) -> Result<Game, Box<Error>> {
+        let checkpoint_count = source.cards_dealt();
+
         let mut columns: Vec<Vec<column::ColumnCard>> = Vec::new();
         for c in initial_counts().iter() {
             let mut column: Vec<column::ColumnCard> = Vec::new();
@@ -55,7 +65,13 @@ impl Game {
             columns.push(column);
         }
     
-        Ok(Game{source: source, columns: columns})
+        Ok(
+            Game{
+                source: source, 
+                columns: columns, 
+                checkpoints: vec![Checkpoint::Start{count: checkpoint_count}],
+            },
+        )
 
     }
 
@@ -68,6 +84,10 @@ impl Game {
     }
     pub fn cards_dealt(&self) -> usize {
         self.source.cards_dealt()
+    }
+
+    pub fn checkpoints(&self) -> Vec<Checkpoint> {
+        self.checkpoints.to_vec()
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {
@@ -88,9 +108,9 @@ impl Game {
         deltas
     }
 
-    pub fn deal(&mut self) -> Result<Vec<delta::Delta>, error::GameError> {
-        use delta::Delta::*;
+    pub fn deal(&mut self) -> Result<Vec<delta::Delta>, Box<Error>> {
         let mut deltas: Vec<delta::Delta> = Vec::new();
+        let checkpoint_count = self.source.cards_dealt();
 
         // check all the columns first, then we don't have to revert 
         // anything on error
@@ -101,7 +121,7 @@ impl Game {
                         message: "invalid deal to empty column".to_string(),
                         line: line!(),
                         column: column!(),
-                    }
+                    }.into()
                 );
             }
         };
@@ -109,7 +129,45 @@ impl Game {
         for i in 0..WIDTH {
             let card = self.source.deal()?;
             self.columns[1].push(column::ColumnCard::Visible{card: card});
-            deltas.push(AppendCard{index: i, card: card});
+            deltas.push(Delta::AppendCard{index: i, card: card});
+        };
+
+        self.checkpoints.push(Checkpoint::Deal{count: checkpoint_count});
+
+        Ok(deltas)
+    }
+
+    pub fn undo(&mut self) -> Result<Vec<delta::Delta>, Box<Error>> {
+        use delta::Delta;
+        let mut deltas: Vec<delta::Delta> = Vec::new();
+
+        if self.checkpoints.len() < 2 {
+            return Err(
+                error::GameError{
+                    message: "no checkpoints to undo".to_string(),
+                    line: line!(),
+                    column: column!(),
+                }.into()
+            );
+        };
+
+        match self.checkpoints.pop() {
+            Some(Checkpoint::Deal{count}) => {
+                self.source.rewind(count)?;
+                for i in 0..WIDTH {
+                    self.columns[1].pop();
+                    deltas.push(Delta::PopCard{index: i});
+                };
+            },
+            _unknown => {
+                return Err(
+                    error::GameError{
+                        message: format!("unknown checkpoint {:?}", _unknown).to_string(),
+                        line: line!(),
+                        column: column!(),
+                    }.into()
+                );
+            },
         };
 
         Ok(deltas)
