@@ -7,7 +7,7 @@ use std::io::{stdin, stdout};
 use std::io::Write; 
 
 fn main() -> Result<(), Box<Error>> {
-    let client = match std::env::args().skip(1).next() {
+    let mut client = match std::env::args().skip(1).next() {
         Some(seed) => client::Client::from_hex(&seed)?,
         None => client::Client::new()?
     };
@@ -22,6 +22,11 @@ fn main() -> Result<(), Box<Error>> {
         match command[0].trim() {
             "" => continue,
             "quit" => break,
+            "deal" => {
+                if client.cards_dealt() < client.total_cards() {
+                    client.deal()?;
+                };
+            },
             _ => {
                 println!("invalid input");
                 continue;
