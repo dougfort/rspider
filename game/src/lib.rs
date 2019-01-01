@@ -11,7 +11,7 @@ pub mod seed;
 pub mod source;
 pub mod delta;
 
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
+#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum ColumnCard {
     Visible{card: cards::Card},
     Hidden{card: cards::Card},
@@ -30,7 +30,7 @@ pub struct Game {
     checkpoints: Vec<Checkpoint>,
 }
 
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
+#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Move {
     pub orig_col: usize,
     pub count: usize,
@@ -138,6 +138,42 @@ impl Game {
         };
 
         self.checkpoints.push(Checkpoint::Deal{count: checkpoint_count});
+
+        Ok(deltas)
+    }
+
+    pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, Box<Error>> {
+        if !self.is_move_valid(&m) {
+            return Err(
+                error::GameError{
+                    message: "invalid move".to_string(),
+                    line: line!(),
+                    column: column!(),
+                }.into()
+            );
+        };
+
+        let mut deltas = Vec::<delta::Delta>::new();
+        let orig_len = self.columns[m.orig_col].len();
+        let orig_cards: Vec<ColumnCard> = self.columns[m.orig_col].drain(orig_len-m.count..).collect();
+        for card in orig_cards {
+            self.columns[m.dest_col].push(card);
+            if let ColumnCard::Visible{card: c} = card {
+                deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                deltas.push(delta::Delta::AppendCard{index: m.dest_col, card: c});
+            }
+            // if the origin column now ends with a hidden card,
+            // flip it to visible
+            if self.columns[m.orig_col].len() > 0 {
+                if let ColumnCard::Hidden{card: c} = self.columns[m.orig_col][self.columns[m.orig_col].len()-1] {
+                    let truncate_len = self.columns[m.orig_col].len()-1;
+                    self.columns[m.orig_col].truncate(truncate_len);
+                    deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                    self.columns[m.orig_col].push(ColumnCard::Visible{card: c});
+                    deltas.push(delta::Delta::AppendCard{index: m.orig_col, card: c});
+                }
+            }
+        }
 
         Ok(deltas)
     }

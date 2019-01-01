@@ -28,6 +28,27 @@ fn main() -> Result<(), Box<Error>> {
                     client.deal()?;
                 };
             },
+            "move" => {
+                if command.len() < 2 {
+                    println!("you must specify the number of a move");
+                    continue
+                }
+                match command[1].parse::<usize>() {
+                    Ok(n) => {
+                        let moves = client.possible_moves()?;
+                        if n-1 >= moves.len() {
+                            println!("move number {} out ot bounds", n);
+                            continue;
+                        }
+                        client.move_cards(moves[n-1])?;
+                    },
+                    Err(e) => {
+                        println!("invalid move number {}", e);
+                        continue;
+                    }
+                };
+
+            }
             "checkpoints" => {
                 for cp in client.checkpoints() {
                     println!("{:?}", cp);
@@ -91,8 +112,8 @@ fn display_possible_moves(client: &client::Client) -> Result<(), Box<Error>>{
     println!("");
     println!("possible moves");
     println!("");
-    for m in client.possible_moves()? {
-        println!("{:?}", m);
+    for (i, m) in client.possible_moves()?.iter().enumerate() {
+        println!("{}: {:?}", i+1, m);
     };
 
     Ok(())

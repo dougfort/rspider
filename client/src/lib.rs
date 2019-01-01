@@ -133,6 +133,11 @@ impl Client {
         Ok(moves)
     }
 
+    pub fn move_cards(&mut self, m: game::Move) -> Result<(), Box<Error>> {
+        let deltas = self.remote.move_cards(m)?;
+        self.apply_deltas(deltas)
+    }
+
     fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Box<Error>> {
         for delta in deltas {
             match delta {
