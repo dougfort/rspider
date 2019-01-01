@@ -13,6 +13,7 @@ fn main() -> Result<(), Box<Error>> {
     };
     loop {
         display_local_game(&client);
+        display_possible_moves(&client)?;
 
         let stdin_line = get_stdin_line(">")?;
         let command: Vec<&str> = stdin_line.trim().split_whitespace().collect();   
@@ -84,4 +85,15 @@ fn display_local_game(client: &client::Client) {
         });
         println!("{}", result);
     };
+}
+
+fn display_possible_moves(client: &client::Client) -> Result<(), Box<Error>>{
+    println!("");
+    println!("possible moves");
+    println!("");
+    for m in client.possible_moves()? {
+        println!("{:?}", m);
+    };
+
+    Ok(())
 }
