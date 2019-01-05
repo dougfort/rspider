@@ -81,7 +81,7 @@ impl Client {
                 match orig[n] {
                     None => break,
                     Some(c) => {
-                        cards.push(c);
+                        cards.insert(0, c);
                         if cards::is_descending_run(&cards) {
                             count += 1;
                         }else {
