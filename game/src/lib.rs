@@ -133,7 +133,7 @@ impl Game {
 
         for i in 0..WIDTH {
             let card = self.source.deal()?;
-            self.columns[1].push(ColumnCard::Visible{card: card});
+            self.columns[i].push(ColumnCard::Visible{card: card});
             deltas.push(Delta::AppendCard{index: i, card: card});
         };
 
@@ -146,7 +146,7 @@ impl Game {
         if !self.is_move_valid(&m) {
             return Err(
                 error::GameError{
-                    message: "invalid move".to_string(),
+                    message: format!("invalid move {:?}", m).to_string(),
                     line: line!(),
                     column: column!(),
                 }.into()
@@ -162,16 +162,16 @@ impl Game {
                 deltas.push(delta::Delta::PopCard{index: m.orig_col});
                 deltas.push(delta::Delta::AppendCard{index: m.dest_col, card: c});
             }
-            // if the origin column now ends with a hidden card,
-            // flip it to visible
-            if self.columns[m.orig_col].len() > 0 {
-                if let ColumnCard::Hidden{card: c} = self.columns[m.orig_col][self.columns[m.orig_col].len()-1] {
-                    let truncate_len = self.columns[m.orig_col].len()-1;
-                    self.columns[m.orig_col].truncate(truncate_len);
-                    deltas.push(delta::Delta::PopCard{index: m.orig_col});
-                    self.columns[m.orig_col].push(ColumnCard::Visible{card: c});
-                    deltas.push(delta::Delta::AppendCard{index: m.orig_col, card: c});
-                }
+        }
+
+        // if the origin column now ends with a hidden card,
+        // flip it to visible
+        if !self.columns[m.orig_col].is_empty() {
+            let last_card_index = self.columns[m.orig_col].len()-1;
+            if let ColumnCard::Hidden{card: c} = self.columns[m.orig_col][last_card_index] {
+                self.columns[m.orig_col][last_card_index] = ColumnCard::Visible{card: c};
+                deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                deltas.push(delta::Delta::AppendCard{index: m.orig_col, card: c});
             }
         }
 
@@ -318,13 +318,31 @@ mod tests {
                 expected_result: true,
             },
             TestData{
-                name: "run: dest not successor".to_string(),
+                name: "multi: dest is multi and successor".to_string(),
                 orig: vec![
-                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Two}},
-                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}},
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Three}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Two}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Ace}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Jack}},
+                ],
+                count: 1,
+                dest: vec![
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: King}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Queen}},
+                ],
+                expected_result: true,
+            },
+            TestData{
+                name: "multi: dest not successor to prev".to_string(),
+                orig: vec![
+                    ColumnCard::Visible{card: Card{suit: Diamonds, rank: Seven}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Five}},
                 ],
                 count: 2,
-                dest: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}}],
+                dest: vec![
+                    ColumnCard::Visible{card: Card{suit: Diamonds, rank: Queen}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Eight}},
+                ],
                 expected_result: false,
             },
             TestData{

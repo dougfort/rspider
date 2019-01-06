@@ -73,11 +73,11 @@ impl Client {
 
     pub fn possible_moves(&self) -> Result<Vec<game::Move>, Box<Error>> {
         let mut moves = Vec::<game::Move>::new();
-        for i in 0..WIDTH {
+        'width: for i in 0..WIDTH {
             let orig = &self.local[i];
             let mut count = 0;
             let mut cards = Vec::<cards::Card>::new();
-            for n in (0..orig.len()).rev() {
+            'len: for n in (0..orig.len()).rev() {
                 match orig[n] {
                     None => break,
                     Some(c) => {
@@ -85,12 +85,13 @@ impl Client {
                         if cards::is_descending_run(&cards) {
                             count += 1;
                         }else {
-                            break
+                            cards = cards[1..].to_vec();
+                            break 'len;
                         }
                     } 
                 }
             };
-            if cards.is_empty() {
+            if count == 0 {
                 return Err(
                     error::ClientError{
                         message: "no move found in origin".to_string(),
@@ -109,7 +110,7 @@ impl Client {
                 }
                 let dest = &self.local[j];
                 if dest.is_empty() {
-                    moves.push(game::Move{orig_col: i, count: count, dest_col: j});
+                    moves.push(game::Move{orig_col: i, count: count, dest_col: j});                    
                     continue;                      
                 }
                 match dest[dest.len()-1] {
@@ -124,7 +125,7 @@ impl Client {
                     },
                     Some(dc) => {
                         if dc.rank == valid_dest_rank {
-                            moves.push(game::Move{orig_col: i, count: count, dest_col: j});
+                            moves.push(game::Move{orig_col: i, count: count, dest_col: j});                    
                         }
                     }
                 }
