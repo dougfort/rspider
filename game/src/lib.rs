@@ -7,10 +7,15 @@ use std::error::Error;
 use delta::Delta;
 
 pub mod error;
-pub mod column;
 pub mod seed;
 pub mod source;
 pub mod delta;
+
+#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
+pub enum ColumnCard {
+    Visible{card: cards::Card},
+    Hidden{card: cards::Card},
+}
 
 #[derive(Debug, Clone)]
 pub enum Checkpoint {
@@ -21,15 +26,15 @@ pub enum Checkpoint {
 #[derive(Debug)]
 pub struct Game {
     source: source::Source,
-    columns: Vec<Vec<column::ColumnCard>>,
+    columns: Vec<Vec<ColumnCard>>,
     checkpoints: Vec<Checkpoint>,
 }
 
-#[derive(Debug, PartialOrd, PartialEq, Clone)]
+#[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Move {
     pub orig_col: usize,
-    pub dest_col: usize,
     pub count: usize,
+    pub dest_col: usize,
 }
 
 const WIDTH: usize = 10;
@@ -53,14 +58,14 @@ impl Game {
     fn from_source(mut source: source::Source) -> Result<Game, Box<Error>> {
         let checkpoint_count = source.cards_dealt();
 
-        let mut columns: Vec<Vec<column::ColumnCard>> = Vec::new();
+        let mut columns: Vec<Vec<ColumnCard>> = Vec::new();
         for c in initial_counts().iter() {
-            let mut column: Vec<column::ColumnCard> = Vec::new();
+            let mut column: Vec<ColumnCard> = Vec::new();
             for _ in 0..*c-1 {
-                let wrapped_card = column::ColumnCard::Hidden{card: source.deal()?}; 
+                let wrapped_card = ColumnCard::Hidden{card: source.deal()?}; 
                 column.push(wrapped_card);
             }
-            let wrapped_card = column::ColumnCard::Visible{card: source.deal()?}; 
+            let wrapped_card = ColumnCard::Visible{card: source.deal()?}; 
             column.push(wrapped_card);
             columns.push(column);
         }
@@ -96,10 +101,10 @@ impl Game {
         for i in 0..WIDTH {
             for column_card in self.columns[i].iter() {
                 match column_card {
-                    column::ColumnCard::Hidden{card: _} => {
+                    ColumnCard::Hidden{card: _} => {
                         deltas.push(HiddenCard{index: i})
                     },
-                    column::ColumnCard::Visible{card: c} => {
+                    ColumnCard::Visible{card: c} => {
                         deltas.push(AppendCard{index: i, card: *c})
                     },
                 }
@@ -128,11 +133,47 @@ impl Game {
 
         for i in 0..WIDTH {
             let card = self.source.deal()?;
-            self.columns[1].push(column::ColumnCard::Visible{card: card});
+            self.columns[i].push(ColumnCard::Visible{card: card});
             deltas.push(Delta::AppendCard{index: i, card: card});
         };
 
         self.checkpoints.push(Checkpoint::Deal{count: checkpoint_count});
+
+        Ok(deltas)
+    }
+
+    pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, Box<Error>> {
+        if !self.is_move_valid(&m) {
+            return Err(
+                error::GameError{
+                    message: format!("invalid move {:?}", m).to_string(),
+                    line: line!(),
+                    column: column!(),
+                }.into()
+            );
+        };
+
+        let mut deltas = Vec::<delta::Delta>::new();
+        let orig_len = self.columns[m.orig_col].len();
+        let orig_cards: Vec<ColumnCard> = self.columns[m.orig_col].drain(orig_len-m.count..).collect();
+        for card in orig_cards {
+            self.columns[m.dest_col].push(card);
+            if let ColumnCard::Visible{card: c} = card {
+                deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                deltas.push(delta::Delta::AppendCard{index: m.dest_col, card: c});
+            }
+        }
+
+        // if the origin column now ends with a hidden card,
+        // flip it to visible
+        if !self.columns[m.orig_col].is_empty() {
+            let last_card_index = self.columns[m.orig_col].len()-1;
+            if let ColumnCard::Hidden{card: c} = self.columns[m.orig_col][last_card_index] {
+                self.columns[m.orig_col][last_card_index] = ColumnCard::Visible{card: c};
+                deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                deltas.push(delta::Delta::AppendCard{index: m.orig_col, card: c});
+            }
+        }
 
         Ok(deltas)
     }
@@ -172,50 +213,47 @@ impl Game {
 
         Ok(deltas)
     }
-}
-/*
+
     pub fn is_move_valid(&self, m: &Move) -> bool {
-        let orig = &self.layout[m.orig_col];
-        let dest = &self.layout[m.dest_col];
-
-        if m.count == 0 || m.count > orig.visible_count {
-            return false;
+        if m.orig_col >= WIDTH || 
+            m.dest_col >= WIDTH || 
+            m.orig_col == m.dest_col ||
+            self.columns[m.orig_col].is_empty() ||
+            m.count > self.columns[m.orig_col].len() {
+            false 
+        } else {
+            is_move_valid(&self.columns[m.orig_col], m.count, &self.columns[m.dest_col])
         }
-
-        match orig.movable_index() {
-            Some(i) => {
-                if cards::is_run(&orig.cards_in_play[i..]) {
-                    match orig.cards_in_play[i].rank.successor() {
-                        Some(s) => s == dest.cards_in_play[dest.cards_in_play.len()-1].rank,
-                        None => false
-                    }
-                } else {
-                    false
-                }
-            },
-            None => false,
-        } 
-
     }
+}
 
-    pub fn possible_moves(&self) -> Result<Vec<Move>, error::GameError> {
-        let mut moves = Vec::new();
-
-        for j in 0..self.layout.len() {
-            for i in 0..self.layout.len() {
-                if i != j {
-                    let orig = &self.layout[i];
-                    for n in 0..orig.visible_count {
-                        let m = Move{orig_col: i, dest_col: j, count: n+1};
-                        if self.is_move_valid(&m) {
-                            moves.push(m);
+fn is_move_valid(orig: &[ColumnCard], count: usize, dest: &[ColumnCard]) -> bool {
+    let mut orig_cards = Vec::<cards::Card>::new();
+    for n in orig.len()-count..orig.len() {
+        let c_card = &orig[n];
+        match c_card {
+            ColumnCard::Hidden{card: _} => return false,
+            ColumnCard::Visible{card: c} => orig_cards.push(*c),
+        };
+    }
+    if cards::is_descending_run(orig_cards.as_slice()) {
+        match dest.last() {
+            // if the dest column is empty, any move is valid
+            None => true,
+            Some(dest_cc) => {
+                match dest_cc {
+                    ColumnCard::Hidden{card: _} => false,
+                    ColumnCard::Visible{card: dest_card} => {
+                        match cards::rank::successor(orig_cards[0].rank) {
+                            None => false,
+                            Some(orig_rank_successor) => dest_card.rank == orig_rank_successor
                         }
                     }
                 }
             }
         }
-
-        Ok(moves)
+    } else {
+        false
     }
 }
 
@@ -223,17 +261,107 @@ impl Game {
 mod tests {
     use super::*;
 
+    struct TestData {
+        name: String,
+        orig: Vec<ColumnCard>,
+        count: usize,
+        dest: Vec<ColumnCard>,
+        expected_result: bool,
+    }    
+
     #[test]
-    fn layout_size() {
-        let x_size: Vec<usize> = vec![6, 5, 5, 6, 5, 5, 6, 5, 5, 6];
-        let x_layout_size: usize = x_size.iter().sum();
-        let deck_size: usize = 2 * 52;
-        let g = Game::new();
-        for (l, a) in g.layout.iter().zip(x_size.iter()) {
-            assert_eq!(l.visible_count, 1);
-            assert_eq!(l.cards_in_play.len(), *a);
+    fn test_is_move_valid() {
+        use cards::Card;
+        use cards::suit::Suit::*;
+        use cards::rank::Rank::*;
+
+        let test_items = vec![
+            TestData{
+                name: "empty dest".to_string(),
+                orig: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}}],
+                count: 1,
+                dest: vec![],
+                expected_result: true,
+            },
+            TestData{
+                name: "single: dest not successor".to_string(),
+                orig: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}}],
+                count: 1,
+                dest: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}}],
+                expected_result: false,
+            },
+            TestData{
+                name: "single: dest is successor".to_string(),
+                orig: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}}],
+                count: 1,
+                dest: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Two}}],
+                expected_result: true,
+            },
+            TestData{
+                name: "multi: dest not successor".to_string(),
+                orig: vec![
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Five}},
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}},
+                ],
+                count: 1,
+                dest: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}}],
+                expected_result: false,
+            },
+            TestData{
+                name: "multi: dest is successor".to_string(),
+                orig: vec![
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Five}},
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}},
+                ],
+                count: 1,
+                dest: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Two}}],
+                expected_result: true,
+            },
+            TestData{
+                name: "multi: dest is multi and successor".to_string(),
+                orig: vec![
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Three}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Two}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Ace}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Jack}},
+                ],
+                count: 1,
+                dest: vec![
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: King}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Queen}},
+                ],
+                expected_result: true,
+            },
+            TestData{
+                name: "multi: dest not successor to prev".to_string(),
+                orig: vec![
+                    ColumnCard::Visible{card: Card{suit: Diamonds, rank: Seven}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Five}},
+                ],
+                count: 2,
+                dest: vec![
+                    ColumnCard::Visible{card: Card{suit: Diamonds, rank: Queen}},
+                    ColumnCard::Visible{card: Card{suit: Hearts, rank: Eight}},
+                ],
+                expected_result: false,
+            },
+            TestData{
+                name: "run: dest is successor".to_string(),
+                orig: vec![
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Two}},
+                    ColumnCard::Visible{card: Card{suit: Clubs, rank: Ace}},
+                ],
+                count: 2,
+                dest: vec![ColumnCard::Visible{card: Card{suit: Clubs, rank: Three}}],
+                expected_result: true,
+            },
+        ];
+        for test_item in test_items {
+            assert_eq!(
+                is_move_valid(&test_item.orig, test_item.count, &test_item.dest), 
+                test_item.expected_result,
+                "{}", test_item.name
+            );
         }
-        assert_eq!(g.reserve.len(), deck_size - x_layout_size);
     }
 }
-*/

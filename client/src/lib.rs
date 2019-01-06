@@ -71,6 +71,74 @@ impl Client {
         Ok(())
     }
 
+    pub fn possible_moves(&self) -> Result<Vec<game::Move>, Box<Error>> {
+        let mut moves = Vec::<game::Move>::new();
+        'width: for i in 0..WIDTH {
+            let orig = &self.local[i];
+            let mut count = 0;
+            let mut cards = Vec::<cards::Card>::new();
+            'len: for n in (0..orig.len()).rev() {
+                match orig[n] {
+                    None => break,
+                    Some(c) => {
+                        cards.insert(0, c);
+                        if cards::is_descending_run(&cards) {
+                            count += 1;
+                        }else {
+                            cards = cards[1..].to_vec();
+                            break 'len;
+                        }
+                    } 
+                }
+            };
+            if count == 0 {
+                return Err(
+                    error::ClientError{
+                        message: "no move found in origin".to_string(),
+                        line: line!(),
+                        column: column!(),
+                    }.into()
+                );
+            }
+            let valid_dest_rank = match cards::rank::successor(cards[0].rank) {
+                None => continue,
+                Some(r) => r,
+            };
+            for j in 0..WIDTH {
+                if j == i {
+                    continue;
+                }
+                let dest = &self.local[j];
+                if dest.is_empty() {
+                    moves.push(game::Move{orig_col: i, count: count, dest_col: j});                    
+                    continue;                      
+                }
+                match dest[dest.len()-1] {
+                    None => {
+                        return Err(
+                            error::ClientError{
+                                message: "bottom card in dest is not visible".to_string(),
+                                line: line!(),
+                                column: column!(),
+                            }.into()
+                        );
+                    },
+                    Some(dc) => {
+                        if dc.rank == valid_dest_rank {
+                            moves.push(game::Move{orig_col: i, count: count, dest_col: j});                    
+                        }
+                    }
+                }
+            }
+        }
+        Ok(moves)
+    }
+
+    pub fn move_cards(&mut self, m: game::Move) -> Result<(), Box<Error>> {
+        let deltas = self.remote.move_cards(m)?;
+        self.apply_deltas(deltas)
+    }
+
     fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Box<Error>> {
         for delta in deltas {
             match delta {
