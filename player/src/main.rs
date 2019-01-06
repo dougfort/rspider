@@ -6,6 +6,8 @@ use std::error::Error;
 use std::io::{stdin, stdout};
 use std::io::Write; 
 
+mod auto;
+
 fn main() -> Result<(), Box<Error>> {
     let mut client = match std::env::args().skip(1).next() {
         Some(seed) => client::Client::from_hex(&seed)?,
@@ -22,6 +24,7 @@ fn main() -> Result<(), Box<Error>> {
         }
         match command[0].trim() {
             "" => continue,
+            "help" => help(),
             "quit" => break,
             "deal" => {
                 if client.cards_dealt() < client.total_cards() {
@@ -61,6 +64,9 @@ fn main() -> Result<(), Box<Error>> {
                 };
                 client.undo()?;
             }
+            "auto" => {
+                auto::play(&mut client)?;
+            }
             _ => {
                 println!("invalid input");
                 continue;
@@ -69,6 +75,15 @@ fn main() -> Result<(), Box<Error>> {
     }
 
     Ok(())
+}
+
+fn help() {
+    println!("quit: exit game");
+    println!("deal: deal one card face up on each pile");
+    println!("move <n>: execute one of the numbered moves");
+    println!("checkpoints: list the known checkpoints");
+    println!("undo: undo the previous operation");
+    println!("auto [<n>]: play in auto mode, for at most 'n' moves");
 }
 
 fn get_stdin_line(prompt: &str) -> std::io::Result<String> {
@@ -85,7 +100,8 @@ fn get_stdin_line(prompt: &str) -> std::io::Result<String> {
 fn display_local_game(client: &client::Client) {
     println!("");
     println!("game: {}; cards dealt: {}; cards remaining: {}", client.seed(), client.cards_dealt(), client.total_cards() - client.cards_dealt());
-    println!("");    println!("");
+    println!("");    
+    println!("");
     println!(" {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
 
     let max_col = client.local.iter().map(|col| {
