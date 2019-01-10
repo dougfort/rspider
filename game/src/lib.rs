@@ -21,6 +21,10 @@ pub enum ColumnCard {
 pub enum Checkpoint {
     Start{count: usize},
     Deal{count: usize},
+    // flipped_hidden_card means there was a hidden card left in the origin column
+    // to make  the move we had to flip the card
+    // to undo the move, we must flip it back
+    Move{action: Move, flipped_hidden_card: bool},
 }
 
 #[derive(Debug)]
@@ -142,7 +146,7 @@ impl Game {
         Ok(deltas)
     }
 
-    pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, Box<Error>> {
+    pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, Box<Error>> {        
         if !self.is_move_valid(&m) {
             return Err(
                 error::GameError{
@@ -154,6 +158,7 @@ impl Game {
         };
 
         let mut deltas = Vec::<delta::Delta>::new();
+
         let orig_len = self.columns[m.orig_col].len();
         let orig_cards: Vec<ColumnCard> = self.columns[m.orig_col].drain(orig_len-m.count..).collect();
         for card in orig_cards {
@@ -166,11 +171,48 @@ impl Game {
 
         // if the origin column now ends with a hidden card,
         // flip it to visible
-        if !self.columns[m.orig_col].is_empty() {
+        let flipped_hidden_card = if self.columns[m.orig_col].is_empty() {
+            false
+        } else {
             let last_card_index = self.columns[m.orig_col].len()-1;
             if let ColumnCard::Hidden{card: c} = self.columns[m.orig_col][last_card_index] {
                 self.columns[m.orig_col][last_card_index] = ColumnCard::Visible{card: c};
                 deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                deltas.push(delta::Delta::AppendCard{index: m.orig_col, card: c});
+                true
+            } else {
+                false
+            }
+        };
+
+        self.checkpoints.push(
+            Checkpoint::Move{action: m, flipped_hidden_card: flipped_hidden_card},
+        );
+
+        Ok(deltas)
+    }
+
+    pub fn reverse_move_cards(&mut self, m: Move, flipped_hidden_card: bool) -> Result<Vec<delta::Delta>, Box<Error>> {        
+        let mut deltas = Vec::<delta::Delta>::new();
+
+        // we are moving from dest to orig: this is undo
+
+        // if we flipped the top card, flip it back
+        if flipped_hidden_card {
+            let last_card_index = self.columns[m.orig_col].len()-1;
+            if let ColumnCard::Visible{card: c} = self.columns[m.orig_col][last_card_index] {
+                self.columns[m.orig_col][last_card_index] = ColumnCard::Hidden{card: c};
+                deltas.push(delta::Delta::PopCard{index: m.orig_col});
+                deltas.push(delta::Delta::HiddenCard{index: m.orig_col});
+            }
+        }
+
+        let dest_len = self.columns[m.dest_col].len();
+        let dest_cards: Vec<ColumnCard> = self.columns[m.dest_col].drain(dest_len-m.count..).collect();
+        for card in dest_cards {
+            self.columns[m.orig_col].push(card);
+            if let ColumnCard::Visible{card: c} = card {
+                deltas.push(delta::Delta::PopCard{index: m.dest_col});
                 deltas.push(delta::Delta::AppendCard{index: m.orig_col, card: c});
             }
         }
@@ -180,8 +222,7 @@ impl Game {
 
     pub fn undo(&mut self) -> Result<Vec<delta::Delta>, Box<Error>> {
         use delta::Delta;
-        let mut deltas: Vec<delta::Delta> = Vec::new();
-
+ 
         if self.checkpoints.len() < 2 {
             return Err(
                 error::GameError{
@@ -194,24 +235,27 @@ impl Game {
 
         match self.checkpoints.pop() {
             Some(Checkpoint::Deal{count}) => {
+                let mut deltas: Vec<delta::Delta> = Vec::new();
                 self.source.rewind(count)?;
                 for i in 0..WIDTH {
                     self.columns[1].pop();
                     deltas.push(Delta::PopCard{index: i});
                 };
+                Ok(deltas)
+            },
+            Some(Checkpoint::Move{action, flipped_hidden_card}) => {
+                self.reverse_move_cards(action, flipped_hidden_card)
             },
             _unknown => {
-                return Err(
+                Err(
                     error::GameError{
                         message: format!("unknown checkpoint {:?}", _unknown).to_string(),
                         line: line!(),
                         column: column!(),
                     }.into()
-                );
+                )
             },
-        };
-
-        Ok(deltas)
+        }
     }
 
     pub fn is_move_valid(&self, m: &Move) -> bool {
