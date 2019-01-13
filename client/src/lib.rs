@@ -74,6 +74,9 @@ impl Client {
     pub fn possible_moves(&self) -> Result<Vec<game::Move>, Box<Error>> {
         let mut moves = Vec::<game::Move>::new();
         'width: for i in 0..WIDTH {
+            if self.local[i].is_empty() {
+                continue 'width;
+            }
             let orig = &self.local[i];
             let mut count = 0;
             let mut cards = Vec::<cards::Card>::new();
