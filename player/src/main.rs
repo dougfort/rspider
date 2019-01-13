@@ -1,15 +1,16 @@
+extern crate failure;
 extern crate hex;
 extern crate cards;
 extern crate client;
 
-use std::error::Error;
+use failure::Error;
 use std::io::{stdin, stdout};
 use std::io::Write; 
 
 mod auto;
 mod display;
 
-fn main() -> Result<(), Box<Error>> {
+fn main() -> Result<(), Error> {
     let mut client = match std::env::args().skip(1).next() {
         Some(seed) => client::Client::from_hex(&seed)?,
         None => client::Client::new()?

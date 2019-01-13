@@ -1,8 +1,9 @@
 extern crate hex;
+extern crate failure;
 extern crate game;
 extern crate cards;
 
-use std::error::Error;
+use failure::Error;
 
 use game::delta::Delta;
 
@@ -18,11 +19,11 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new() -> Result<Client, Box<Error>> {
+    pub fn new() -> Result<Client, Error> {
         client_from_game(game::Game::new()?)
     }
 
-    pub fn from_hex(hex_seed: &str) -> Result<Client, Box<Error>> {
+    pub fn from_hex(hex_seed: &str) -> Result<Client, Error> {
         let seed = game::seed::from_hex(hex_seed)?;
 
         let game = game::Game::from_seed(seed)?;
@@ -45,7 +46,7 @@ impl Client {
         self.remote.checkpoints()
     }
 
-    pub fn deal(&mut self) -> std::result::Result<(), Box<Error>> {
+    pub fn deal(&mut self) -> std::result::Result<(), Error> {
         for delta in self.remote.deal()? {
             use game::delta::Delta::*;
             match delta {
@@ -65,13 +66,13 @@ impl Client {
         Ok(())
     }
 
-    pub fn undo(&mut self) -> Result<(), Box<Error>> {
+    pub fn undo(&mut self) -> Result<(), Error> {
         let deltas = self.remote.undo()?;
         self.apply_deltas(deltas)?;        
         Ok(())
     }
 
-    pub fn possible_moves(&self) -> Result<Vec<game::Move>, Box<Error>> {
+    pub fn possible_moves(&self) -> Result<Vec<game::Move>, Error> {
         let mut moves = Vec::<game::Move>::new();
         'width: for i in 0..WIDTH {
             if self.local[i].is_empty() {
@@ -137,12 +138,12 @@ impl Client {
         Ok(moves)
     }
 
-    pub fn move_cards(&mut self, m: game::Move) -> Result<(), Box<Error>> {
+    pub fn move_cards(&mut self, m: game::Move) -> Result<(), Error> {
         let deltas = self.remote.move_cards(m)?;
         self.apply_deltas(deltas)
     }
 
-    fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Box<Error>> {
+    fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Error> {
         for delta in deltas {
             match delta {
                 Delta::HiddenCard{index: i} => self.local[i].push(None),
@@ -156,7 +157,7 @@ impl Client {
 
 } 
 
-fn client_from_game(game: game::Game) -> Result<Client, Box<Error>> {
+fn client_from_game(game: game::Game) -> Result<Client, Error> {
     let mut client = Client{
         remote: game,
         local: Vec::new(),

@@ -1,7 +1,8 @@
+extern crate failure;
 extern crate cards;
 
+use failure::Error;
 use rand::{Rng, SeedableRng, XorShiftRng};
-use std::error::Error;
 
 use seed;
 use error;
@@ -60,7 +61,7 @@ impl Source {
 
     // rewind resets the internal index back to the point where the number of
     // cards dealt was n.
-    pub fn rewind(&mut self, n: usize) -> Result<(), Box<Error>> {
+    pub fn rewind(&mut self, n: usize) -> Result<(), Error> {
         if n > self.next_card {
             Err(
                 error::GameError{

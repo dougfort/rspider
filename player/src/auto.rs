@@ -1,9 +1,11 @@
-use std::error::Error;
+extern crate failure;
+
+use failure::Error;
 use std::{thread, time};
 
 use display;
 
-pub fn play(client: &mut client::Client) -> Result<(), Box<Error>> {
+pub fn play(client: &mut client::Client) -> Result<(), Error> {
     let mut play = 0;
     let mut prev_move = (0, 0, 0);
 
