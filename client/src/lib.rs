@@ -1,8 +1,3 @@
-extern crate hex;
-extern crate failure;
-extern crate game;
-extern crate cards;
-
 use failure::Error;
 
 use game::delta::Delta;

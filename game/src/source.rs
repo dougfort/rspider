@@ -1,11 +1,8 @@
-extern crate failure;
-extern crate cards;
-
 use failure::Error;
 use rand::{Rng, SeedableRng, XorShiftRng};
 
-use seed;
-use error;
+use super::seed;
+use super::error;
 
 #[derive(Debug)]
 pub struct Source {

@@ -1,4 +1,3 @@
-extern crate hex;
 
 use rand::random;
 

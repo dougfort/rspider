@@ -1,8 +1,3 @@
-extern crate failure;
-extern crate hex;
-extern crate cards;
-extern crate client;
-
 use failure::Error;
 use std::io::{stdin, stdout};
 use std::io::Write; 
