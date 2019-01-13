@@ -1,4 +1,5 @@
-use std::error::Error;
+extern crate failure;
+use failure::Error;
 
 pub fn help() {
     println!("quit: exit game");
@@ -36,7 +37,7 @@ pub fn local_game(client: &client::Client) {
     };
 }
 
-pub fn possible_moves(client: &client::Client) -> Result<(), Box<Error>>{
+pub fn possible_moves(client: &client::Client) -> Result<(), Error>{
     println!("");
     println!("possible moves");
     println!("");
