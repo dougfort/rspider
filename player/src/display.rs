@@ -1,4 +1,3 @@
-extern crate failure;
 use failure::Error;
 
 pub fn help() {

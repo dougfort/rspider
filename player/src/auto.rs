@@ -1,9 +1,7 @@
-extern crate failure;
-
 use failure::Error;
 use std::{thread, time};
 
-use display;
+use super::display;
 
 pub fn play(client: &mut client::Client) -> Result<(), Error> {
     let mut play = 0;

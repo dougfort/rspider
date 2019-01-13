@@ -1,11 +1,7 @@
 // game definitions
 
-extern crate failure;
-extern crate rand;
-extern crate cards;
-
 use failure::Error;
-use delta::Delta;
+use self::delta::Delta;
 
 pub mod error;
 pub mod seed;
@@ -101,7 +97,7 @@ impl Game {
     }
 
     pub fn initial_deltas(&self) -> Vec<delta::Delta> {
-        use delta::Delta::*;
+        use self::delta::Delta::*;
         let mut deltas: Vec<delta::Delta> = Vec::new();
         for i in 0..WIDTH {
             for column_card in self.columns[i].iter() {
@@ -222,7 +218,7 @@ impl Game {
     }
 
     pub fn undo(&mut self) -> Result<Vec<delta::Delta>, Error> {
-        use delta::Delta;
+        use self::delta::Delta;
  
         if self.checkpoints.len() < 2 {
             return Err(

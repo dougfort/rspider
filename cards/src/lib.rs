@@ -88,8 +88,8 @@ pub fn is_descending_run(cards: &[Card]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use suit::Suit::*;
-    use rank::Rank::*;
+    use super::suit::Suit::*;
+    use super::rank::Rank::*;
 
     #[test]
     fn runs() {
@@ -189,8 +189,8 @@ mod tests {
 
     #[test]
     fn deck_order() {
-        use suit::Suit::*;
-        use rank::Rank::*;
+        use super::suit::Suit::*;
+        use super::rank::Rank::*;
         let d: Vec<Card> = self::Card::iter().collect();
         assert_eq!(d.len(), 52);
         let ace_of_clubs = Card {
