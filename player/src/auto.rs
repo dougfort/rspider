@@ -20,15 +20,29 @@ pub fn play(client: &mut client::Client) -> Result<(), Box<Error>> {
                 println!(">>> dealing");
                 client.deal()?;
             }
-        } else {
-            let action = moves[1];            
-            println!(">>> {:?}", action);
-            let current_move = (action.orig_col, action.count, action.dest_col);
-            if current_move == prev_move {
-                println!("*** duplicate move");
-            };
-            client.move_cards(action)?;
-            prev_move = current_move;
+        } else {  
+            let mut moved = false;          
+            'move_loop: for (i, action) in moves.iter().enumerate() {
+                println!(">>> {:?}[{}]", action, i);
+                let current_move = (action.orig_col, action.count, action.dest_col);
+                if current_move == prev_move {
+                    println!("*** duplicate move");
+                    continue 'move_loop;
+                };
+                let current_move_reversed = (action.dest_col, action.count, action.orig_col);
+                if current_move_reversed == prev_move {
+                    println!("*** move cycle");
+                    continue 'move_loop;
+                };
+                client.move_cards(*action)?;
+                prev_move = current_move;
+                moved = true;
+                break 'move_loop;
+            }
+            if !moved {
+                println!(">>> dealing (unable to find valid move)");
+                client.deal()?;
+            }
         }
 
         display::local_game(&client);
