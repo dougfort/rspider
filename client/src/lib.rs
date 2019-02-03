@@ -1,4 +1,5 @@
 use failure::Error;
+use sha2::{Sha256, Digest};
 
 use game::delta::Delta;
 
@@ -65,6 +66,25 @@ impl Client {
         let deltas = self.remote.undo()?;
         self.apply_deltas(deltas)?;        
         Ok(())
+    }
+
+    pub fn digest(&self) -> String {
+        let mut hasher = Sha256::new();
+        for column in &self.local {
+            hasher.input([b'|']);
+            for card in column {
+                let v = match card {
+                    Some(c) => {
+                        let v: [u8; 2] = (*c).into();
+                        v
+                    },
+                    None => [b'_', 2],
+                };
+                hasher.input(v);
+            }
+        }
+
+        hex::encode(hasher.result())
     }
 
     pub fn possible_moves(&self) -> Result<Vec<game::Move>, Error> {
