@@ -11,7 +11,8 @@ pub fn help() {
 
 pub fn local_game(client: &client::Client) {
     println!("");
-    println!("game: {}; cards dealt: {}; cards remaining: {}", client.seed(), client.cards_dealt(), client.total_cards() - client.cards_dealt());
+    println!("game: {}; cards dealt: {}; cards remaining: {}: digest {}", 
+        client.seed(), client.cards_dealt(), client.total_cards() - client.cards_dealt(), client.digest());
     println!("");    
     println!("");
     println!(" {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9);

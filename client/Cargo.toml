@@ -5,7 +5,8 @@ authors = ["dougfort <doug.fort@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-failure = "0.1.5"
-hex = "0.3.2"
+failure = "0.1"
+hex = "0.3"
+sha2 = "0.8"
 cards = {path = "../cards" }
 game = {path = "../game" }

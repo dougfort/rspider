@@ -40,6 +40,27 @@ impl fmt::Display for Rank {
     }
 }
 
+impl From<Rank> for u8 {
+    fn from(rank: Rank) -> u8 {
+        use self::Rank::*;
+        match rank {
+            Ace => b'A',
+            Two => b'2',
+            Three => b'3',
+            Four => b'4',
+            Five => b'5',
+            Six => b'6',
+            Seven => b'7',
+            Eight => b'8',
+            Nine => b'9',
+            Ten => b'X',
+            Jack => b'J',
+            Queen => b'Q',
+            King => b'K',
+        }
+    }
+}
+
 pub fn successor(r: Rank) -> Option<Rank> {
     use self::Rank::*;
     match r {

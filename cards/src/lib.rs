@@ -17,6 +17,12 @@ impl fmt::Display for Card {
     }
 }
 
+impl From<Card> for [u8; 2] {
+    fn from(card: Card) -> [u8; 2] {
+        [card.suit as u8, card.rank as u8]
+    }
+}
+
 pub fn successor(c: Card) -> Option<Card> {
     if let Some(r) = rank::successor(c.rank) {
         Some(Card{suit: c.suit, rank: r})

@@ -20,6 +20,17 @@ impl fmt::Display for Suit {
     }
 }
 
+impl From<Suit> for u8 {
+    fn from(suit: Suit) -> u8 {
+        match suit {
+            Suit::Clubs => b'C',
+            Suit::Diamonds => b'D',
+            Suit::Hearts => b'H',
+            Suit::Spades => b'S',
+        }
+    }
+}
+
 pub fn successor(s: Suit) -> Option<Suit> {
     use self::Suit::*;
     match s {
