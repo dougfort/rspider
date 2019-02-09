@@ -1,8 +1,10 @@
-use failure::Error;
 use rand::{Rng, SeedableRng, XorShiftRng};
 
 use super::seed;
 use super::error;
+
+use error::GameError::*;
+
 
 #[derive(Debug)]
 pub struct Source {
@@ -33,13 +35,7 @@ impl Source {
     // by incrementing next_card
     pub fn deal(&mut self) -> Result<cards::Card, error::GameError> {
         if self.next_card >= self.cards.len() {
-             Err(
-                error::GameError{
-                    message: "deal from empty deck".to_string(),
-                    line: line!(),
-                    column: column!(),
-                }
-            )
+             Err(DealFromEmptyDeck{})
         } else {
             let next = self.next_card;
             self.next_card += 1;
@@ -58,15 +54,9 @@ impl Source {
 
     // rewind resets the internal index back to the point where the number of
     // cards dealt was n.
-    pub fn rewind(&mut self, n: usize) -> Result<(), Error> {
+    pub fn rewind(&mut self, n: usize) -> Result<(), error::GameError> {
         if n > self.next_card {
-            Err(
-                error::GameError{
-                    message: "rewind into the future".to_string(),
-                    line: line!(),
-                    column: column!(),
-                }.into()
-            )
+            Err(RewindIntoFuture{})
         } else {
             self.next_card = n;
             Ok(())

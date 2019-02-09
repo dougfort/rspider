@@ -1,25 +1,26 @@
-use std::fmt;
-use std::error::Error;
+use failure::{Fail};
+use crate::Move;
 
-#[derive(Debug, Clone)]
-pub struct GameError {
-    pub message: String,
-    pub line: u32,
-    pub column: u32,    
-}
 
-impl fmt::Display for GameError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "{} ({}:{})", self.message, self.line, self.column)
-    }
-}
+#[derive(Debug, Fail)]
+pub enum GameError {
+    #[fail(display = "invalid deal to empty column")]
+    DealToEmptyColumn{},
 
-impl Error for GameError {
-    fn description(&self) -> &str {
-        self.message.as_str()
-    }
+    #[fail(display = "Invalid Move {:?}", mv)]
+    InvalidMove{
+        mv: Move
+    },
 
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        Some(self)
-    }
+    #[fail(display = "no checkpoints to undo")]
+    NoCheckpointsToUndo{},
+
+    #[fail(display = "unknown checkpoint")]
+    UnknownCheckpoint{},
+
+    #[fail(display = "deal from empty deck")]
+    DealFromEmptyDeck{},
+
+    #[fail(display = "rewind into the future")]
+    RewindIntoFuture{},
 }

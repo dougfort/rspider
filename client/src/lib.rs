@@ -4,6 +4,7 @@ use sha2::{Sha256, Digest};
 use game::delta::Delta;
 
 pub mod error;
+use error::ClientError::*;
 
 const WIDTH: usize = 10;
 type Column = Vec<Option<cards::Card>>;
@@ -48,13 +49,7 @@ impl Client {
             match delta {
                 AppendCard{index: i, card: c} => self.local[i].push(Some(c)),
                 _ => {
-                    return Err(
-                        error::ClientError{
-                            message: format!("unknown delta {:?}", delta),
-                            line: line!(),
-                            column: column!(),
-                        }.into()
-                    );
+                    return Err(UnknownDelta{delta: delta}.into());
                 }
             }
         }
@@ -111,13 +106,7 @@ impl Client {
                 }
             };
             if count == 0 {
-                return Err(
-                    error::ClientError{
-                        message: "no move found in origin".to_string(),
-                        line: line!(),
-                        column: column!(),
-                    }.into()
-                );
+                return Err(NoMove{}.into());
             }
             let valid_dest_rank = match cards::rank::successor(cards[0].rank) {
                 None => continue,
@@ -134,13 +123,7 @@ impl Client {
                 }
                 match dest[dest.len()-1] {
                     None => {
-                        return Err(
-                            error::ClientError{
-                                message: "bottom card in dest is not visible".to_string(),
-                                line: line!(),
-                                column: column!(),
-                            }.into()
-                        );
+                        return Err(BottomNotVisible{}.into());
                     },
                     Some(dc) => {
                         if dc.rank == valid_dest_rank {
