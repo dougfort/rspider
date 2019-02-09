@@ -8,6 +8,8 @@ pub mod seed;
 pub mod source;
 pub mod delta;
 
+use error::GameError::*;
+
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum ColumnCard {
     Visible{card: cards::Card},
@@ -122,13 +124,7 @@ impl Game {
         // anything on error
         for i in 0..WIDTH {
             if self.columns[i].is_empty() {
-                return Err(
-                    error::GameError{
-                        message: "invalid deal to empty column".to_string(),
-                        line: line!(),
-                        column: column!(),
-                    }.into()
-                );
+                return Err(DealToEmptyColumn{}.into());
             }
         };
 
@@ -145,13 +141,7 @@ impl Game {
 
     pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, Error> {        
         if !self.is_move_valid(&m) {
-            return Err(
-                error::GameError{
-                    message: format!("invalid move {:?}", m).to_string(),
-                    line: line!(),
-                    column: column!(),
-                }.into()
-            );
+            return Err(InvalidMove{mv: m}.into());
         };
 
         let mut deltas = Vec::<delta::Delta>::new();
@@ -221,13 +211,7 @@ impl Game {
         use self::delta::Delta;
  
         if self.checkpoints.len() < 2 {
-            return Err(
-                error::GameError{
-                    message: "no checkpoints to undo".to_string(),
-                    line: line!(),
-                    column: column!(),
-                }.into()
-            );
+            return Err(NoCheckpointsToUndo{}.into());
         };
 
         match self.checkpoints.pop() {
@@ -244,14 +228,8 @@ impl Game {
                 self.reverse_move_cards(action, flipped_hidden_card)
             },
             _unknown => {
-                Err(
-                    error::GameError{
-                        message: format!("unknown checkpoint {:?}", _unknown).to_string(),
-                        line: line!(),
-                        column: column!(),
-                    }.into()
-                )
-            },
+                return Err(UnknownCheckpoint{}.into());
+            }
         }
     }
 
