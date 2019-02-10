@@ -37,10 +37,10 @@ fn main() -> Result<(), Error> {
                     Ok(n) => {
                         let moves = client.possible_moves()?;
                         if n-1 >= moves.len() {
-                            println!("move number {} out ot bounds", n);
+                            println!("move number {} out of bounds", n);
                             continue;
                         }
-                        client.move_cards(moves[n-1])?;
+                        client.move_cards(moves[n-1].mv)?;
                     },
                     Err(e) => {
                         println!("invalid move number {}", e);
