@@ -22,19 +22,23 @@ pub fn play(client: &mut client::Client) -> Result<(), Error> {
             }
         } else {  
             let mut moved = false;          
-            'move_loop: for (i, action) in moves.iter().enumerate() {
-                println!(">>> {:?}[{}]", action, i);
-                let current_move = (action.orig_col, action.count, action.dest_col);
+            'move_loop: for (i, pmv) in moves.iter().enumerate() {
+                println!(">>> {:?}[{}]", pmv, i);
+                let current_move = (pmv.mv.orig_col, pmv.mv.count, pmv.mv.dest_col);
                 if current_move == prev_move {
                     println!("*** duplicate move");
                     continue 'move_loop;
                 };
-                let current_move_reversed = (action.dest_col, action.count, action.orig_col);
+                let current_move_reversed = (pmv.mv.dest_col, pmv.mv.count, pmv.mv.orig_col);
                 if current_move_reversed == prev_move {
                     println!("*** move cycle");
                     continue 'move_loop;
                 };
-                client.move_cards(*action)?;
+                if pmv.is_used {
+                    println!("*** move already used");
+                    continue 'move_loop;
+                }
+                client.move_cards(pmv.mv)?;
                 prev_move = current_move;
                 moved = true;
                 break 'move_loop;

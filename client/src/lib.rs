@@ -1,7 +1,9 @@
 use failure::Error;
 use sha2::{Sha256, Digest};
+use std::collections::HashMap;
 
 use game::delta::Delta;
+use game::Move;
 
 pub mod error;
 use error::ClientError::*;
@@ -12,7 +14,14 @@ type Column = Vec<Option<cards::Card>>;
 #[derive(Debug)]
 pub struct Client {
     remote: game::Game,
+    used: HashMap<String, Move>,
     pub local: Vec<Column>
+}
+
+#[derive(Debug, Clone)] 
+pub struct PotentialMove {
+    pub mv: Move,
+    pub is_used: bool
 }
 
 impl Client {
@@ -59,7 +68,8 @@ impl Client {
 
     pub fn undo(&mut self) -> Result<(), Error> {
         let deltas = self.remote.undo()?;
-        self.apply_deltas(deltas)?;        
+        self.apply_deltas(deltas)?;       
+        self.used.remove(&self.digest());
         Ok(())
     }
 
@@ -82,8 +92,14 @@ impl Client {
         hex::encode(hasher.result())
     }
 
-    pub fn possible_moves(&self) -> Result<Vec<game::Move>, Error> {
-        let mut moves = Vec::<game::Move>::new();
+    pub fn possible_moves(&self) -> Result<Vec<PotentialMove>, Error> {
+        let is_used = |m| {
+            match self.used.get(&self.digest()) {
+                Some(u) => u == &m,
+                None => false,
+            }
+        };
+        let mut moves = Vec::<PotentialMove>::new();
         'width: for i in 0..WIDTH {
             if self.local[i].is_empty() {
                 continue 'width;
@@ -118,7 +134,12 @@ impl Client {
                 }
                 let dest = &self.local[j];
                 if dest.is_empty() {
-                    moves.push(game::Move{orig_col: i, count: count, dest_col: j});                    
+                    let gmv = game::Move{orig_col: i, count: count, dest_col: j};
+                    let pmv = PotentialMove{
+                        mv: gmv,
+                        is_used: is_used(gmv)
+                    };
+                    moves.push(pmv);                    
                     continue;                      
                 }
                 match dest[dest.len()-1] {
@@ -127,7 +148,13 @@ impl Client {
                     },
                     Some(dc) => {
                         if dc.rank == valid_dest_rank {
-                            moves.push(game::Move{orig_col: i, count: count, dest_col: j});                    
+                            let gmv = game::Move{orig_col: i, count: count, dest_col: j};
+                            let move_is_used = is_used(gmv);
+                            let pmv = PotentialMove{
+                                mv: gmv,
+                                is_used: move_is_used,
+                            };
+                            moves.push(pmv);                    
                         }
                     }
                 }
@@ -137,8 +164,14 @@ impl Client {
     }
 
     pub fn move_cards(&mut self, m: game::Move) -> Result<(), Error> {
+        let pre_move_digest = self.digest();
+
         let deltas = self.remote.move_cards(m)?;
-        self.apply_deltas(deltas)
+        self.apply_deltas(deltas)?;
+
+        self.used.insert(pre_move_digest, m);
+
+        Ok(())
     }
 
     fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Error> {
@@ -158,6 +191,7 @@ impl Client {
 fn client_from_game(game: game::Game) -> Result<Client, Error> {
     let mut client = Client{
         remote: game,
+        used: HashMap::new(),
         local: Vec::new(),
     };
 
