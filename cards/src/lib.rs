@@ -2,8 +2,8 @@
 
 use std::fmt;
 
-pub mod suit;
 pub mod rank;
+pub mod suit;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub struct Card {
@@ -25,18 +25,22 @@ impl From<Card> for [u8; 2] {
 
 pub fn successor(c: Card) -> Option<Card> {
     if let Some(r) = rank::successor(c.rank) {
-        Some(Card{suit: c.suit, rank: r})
+        Some(Card {
+            suit: c.suit,
+            rank: r,
+        })
+    } else if let Some(s) = suit::successor(c.suit) {
+        Some(Card {
+            suit: s,
+            rank: rank::first(),
+        })
     } else {
-        if let Some(s) = suit::successor(c.suit) {
-            Some(Card{suit: s, rank: rank::first()})
-        } else {
-            None
-        }
+        None
     }
 }
 
 pub struct Iter<Card> {
-    current: Option<Card>
+    current: Option<Card>,
 }
 
 impl Iterator for Iter<Card> {
@@ -55,11 +59,16 @@ impl Iterator for Iter<Card> {
 
 impl Card {
     pub fn iter() -> Iter<Card> {
-        Iter{current: Some(Card{suit: suit::first(), rank: rank::first()})}
+        Iter {
+            current: Some(Card {
+                suit: suit::first(),
+                rank: rank::first(),
+            }),
+        }
     }
 }
 
-// is_descending_run returns true if the cards form a sequence: 
+// is_descending_run returns true if the cards form a sequence:
 //    all the same suit
 //    rank in descending order
 // an empty slice is not a run
@@ -80,8 +89,10 @@ pub fn is_descending_run(cards: &[Card]) -> bool {
                         if cards[i] != s {
                             return false;
                         };
-                    },
-                    None => { return false; }
+                    }
+                    None => {
+                        return false;
+                    }
                 };
                 i += 1;
                 j += 1;
@@ -93,9 +104,9 @@ pub fn is_descending_run(cards: &[Card]) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use super::suit::Suit::*;
     use super::rank::Rank::*;
+    use super::suit::Suit::*;
+    use super::*;
 
     #[test]
     fn runs() {
@@ -105,45 +116,99 @@ mod tests {
         }
 
         let run_test_data = vec![
-            RunTestDataType{cards: vec![], is_run: false},
-            RunTestDataType{cards: vec![Card{suit: Clubs, rank: Ace}], is_run: true},
-            RunTestDataType{
+            RunTestDataType {
+                cards: vec![],
+                is_run: false,
+            },
+            RunTestDataType {
+                cards: vec![Card {
+                    suit: Clubs,
+                    rank: Ace,
+                }],
+                is_run: true,
+            },
+            RunTestDataType {
                 cards: vec![
-                    Card{suit: Clubs, rank: Ace},
-                    Card{suit: Diamonds, rank: Two},
+                    Card {
+                        suit: Clubs,
+                        rank: Ace,
+                    },
+                    Card {
+                        suit: Diamonds,
+                        rank: Two,
+                    },
                 ],
                 is_run: false,
             },
-            RunTestDataType{
+            RunTestDataType {
                 cards: vec![
-                    Card{suit: Clubs, rank: Ace},
-                    Card{suit: Clubs, rank: Five},
+                    Card {
+                        suit: Clubs,
+                        rank: Ace,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Five,
+                    },
                 ],
                 is_run: false,
             },
-            RunTestDataType{
+            RunTestDataType {
                 cards: vec![
-                    Card{suit: Clubs, rank: Two},
-                    Card{suit: Clubs, rank: Ace},
+                    Card {
+                        suit: Clubs,
+                        rank: Two,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Ace,
+                    },
                 ],
                 is_run: true,
             },
-            RunTestDataType{
+            RunTestDataType {
                 cards: vec![
-                    Card{suit: Clubs, rank: Seven},
-                    Card{suit: Clubs, rank: Six},
-                    Card{suit: Clubs, rank: Five},
-                    Card{suit: Clubs, rank: Four},
-                    Card{suit: Clubs, rank: Three},
-                    Card{suit: Clubs, rank: Two},
-                    Card{suit: Clubs, rank: Ace},
+                    Card {
+                        suit: Clubs,
+                        rank: Seven,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Six,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Five,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Four,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Three,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Two,
+                    },
+                    Card {
+                        suit: Clubs,
+                        rank: Ace,
+                    },
                 ],
                 is_run: true,
             },
-            RunTestDataType{
+            RunTestDataType {
                 cards: vec![
-                    Card{suit: Diamonds, rank: King},
-                    Card{suit: Diamonds, rank: Queen},
+                    Card {
+                        suit: Diamonds,
+                        rank: King,
+                    },
+                    Card {
+                        suit: Diamonds,
+                        rank: Queen,
+                    },
                 ],
                 is_run: true,
             },
@@ -151,7 +216,6 @@ mod tests {
         for td in run_test_data {
             assert_eq!(is_descending_run(&td.cards), td.is_run)
         }
-
     }
 
     #[test]
@@ -187,7 +251,8 @@ mod tests {
                     rank: Ace,
                 },
             ),
-        ].iter()
+        ]
+        .iter()
         {
             assert!(c1 < c2);
         }
@@ -195,8 +260,8 @@ mod tests {
 
     #[test]
     fn deck_order() {
-        use super::suit::Suit::*;
         use super::rank::Rank::*;
+        use super::suit::Suit::*;
         let d: Vec<Card> = self::Card::iter().collect();
         assert_eq!(d.len(), 52);
         let ace_of_clubs = Card {

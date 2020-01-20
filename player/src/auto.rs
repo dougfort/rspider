@@ -20,8 +20,8 @@ pub fn play(client: &mut client::Client) -> Result<(), Error> {
                 println!(">>> dealing");
                 client.deal()?;
             }
-        } else {  
-            let mut moved = false;          
+        } else {
+            let mut moved = false;
             'move_loop: for (i, pmv) in moves.iter().enumerate() {
                 println!(">>> {:?}[{}]", pmv, i);
                 let current_move = (pmv.mv.orig_col, pmv.mv.count, pmv.mv.dest_col);

@@ -1,4 +1,3 @@
-
 use rand::random;
 
 pub fn from_hex(hex_string: &str) -> Result<[u8; 16], hex::FromHexError> {
@@ -15,8 +14,8 @@ pub fn from_hex(hex_string: &str) -> Result<[u8; 16], hex::FromHexError> {
 
 pub fn from_random() -> [u8; 16] {
     let mut seed: [u8; 16] = [0; 16];
-    for i in 0..16 {
-        seed[i] = random::<u8>();
+    for item in &mut seed {
+        *item = random::<u8>();
     }
 
     seed
