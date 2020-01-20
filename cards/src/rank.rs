@@ -1,6 +1,5 @@
 use std::fmt;
 
-
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum Rank {
     Ace,
@@ -67,7 +66,7 @@ pub fn successor(r: Rank) -> Option<Rank> {
         Ace => Some(Two),
         Two => Some(Three),
         Three => Some(Four),
-        Four => Some(Five), 
+        Four => Some(Five),
         Five => Some(Six),
         Six => Some(Seven),
         Seven => Some(Eight),
@@ -85,12 +84,12 @@ pub fn first() -> Rank {
 }
 
 pub struct Iter<Rank> {
-    current: Option<Rank>
+    current: Option<Rank>,
 }
 
 pub fn iter() -> Iter<Rank> {
-    Iter{
-        current: Some(first())
+    Iter {
+        current: Some(first()),
     }
 }
 

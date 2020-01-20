@@ -1,21 +1,21 @@
 use failure::Error;
+use std::io::Write;
 use std::io::{stdin, stdout};
-use std::io::Write; 
 
 mod auto;
 mod display;
 
 fn main() -> Result<(), Error> {
-    let mut client = match std::env::args().skip(1).next() {
+    let mut client = match std::env::args().nth(1) {
         Some(seed) => client::Client::from_hex(&seed)?,
-        None => client::Client::new()?
+        None => client::Client::new()?,
     };
     loop {
         display::local_game(&client);
         display::possible_moves(&client)?;
 
         let stdin_line = get_stdin_line(">")?;
-        let command: Vec<&str> = stdin_line.trim().split_whitespace().collect();   
+        let command: Vec<&str> = stdin_line.trim().split_whitespace().collect();
         if command.is_empty() {
             continue;
         }
@@ -27,27 +27,26 @@ fn main() -> Result<(), Error> {
                 if client.cards_dealt() < client.total_cards() {
                     client.deal()?;
                 };
-            },
+            }
             "move" => {
                 if command.len() < 2 {
                     println!("you must specify the number of a move");
-                    continue
+                    continue;
                 }
                 match command[1].parse::<usize>() {
                     Ok(n) => {
                         let moves = client.possible_moves()?;
-                        if n-1 >= moves.len() {
+                        if n > moves.len() {
                             println!("move number {} out of bounds", n);
                             continue;
                         }
-                        client.move_cards(moves[n-1].mv)?;
-                    },
+                        client.move_cards(moves[n - 1].mv)?;
+                    }
                     Err(e) => {
                         println!("invalid move number {}", e);
                         continue;
                     }
                 };
-
             }
             "checkpoints" => {
                 for cp in client.checkpoints() {
@@ -67,7 +66,7 @@ fn main() -> Result<(), Error> {
             _ => {
                 println!("invalid input");
                 continue;
-            },
+            }
         }
     }
 
@@ -75,7 +74,7 @@ fn main() -> Result<(), Error> {
 }
 
 fn get_stdin_line(prompt: &str) -> std::io::Result<String> {
-    println!("");
+    println!();
     print!("{} ", prompt);
     stdout().flush()?;
 
@@ -83,6 +82,4 @@ fn get_stdin_line(prompt: &str) -> std::io::Result<String> {
     stdin().read_line(&mut input)?;
 
     Ok(input)
-} 
-
-
+}

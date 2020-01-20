@@ -1,17 +1,14 @@
-use failure::{Fail};
+use failure::Fail;
 use game::delta::Delta;
-
 
 #[derive(Debug, Fail)]
 pub enum ClientError {
     #[fail(display = "unknown Delta {:?}", delta)]
-    UnknownDelta{
-        delta: Delta
-    },
+    UnknownDelta { delta: Delta },
 
     #[fail(display = "no move found in origin")]
-    NoMove{},
-    
+    NoMove {},
+
     #[fail(display = "bottom card in dest is not visible")]
-    BottomNotVisible{}
+    BottomNotVisible {},
 }

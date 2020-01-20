@@ -46,11 +46,13 @@ pub fn first() -> Suit {
 }
 
 pub fn iter() -> Iter<Suit> {
-    Iter{current: Some(first())}
+    Iter {
+        current: Some(first()),
+    }
 }
 
 pub struct Iter<Suit> {
-    current: Option<Suit>
+    current: Option<Suit>,
 }
 
 impl Iterator for Iter<Suit> {
@@ -66,4 +68,3 @@ impl Iterator for Iter<Suit> {
         }
     }
 }
-

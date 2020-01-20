@@ -1,26 +1,23 @@
-use failure::{Fail};
 use crate::Move;
-
+use failure::Fail;
 
 #[derive(Debug, Fail)]
 pub enum GameError {
     #[fail(display = "invalid deal to empty column")]
-    DealToEmptyColumn{},
+    DealToEmptyColumn {},
 
     #[fail(display = "Invalid Move {:?}", mv)]
-    InvalidMove{
-        mv: Move
-    },
+    InvalidMove { mv: Move },
 
     #[fail(display = "no checkpoints to undo")]
-    NoCheckpointsToUndo{},
+    NoCheckpointsToUndo {},
 
     #[fail(display = "unknown checkpoint")]
-    UnknownCheckpoint{},
+    UnknownCheckpoint {},
 
     #[fail(display = "deal from empty deck")]
-    DealFromEmptyDeck{},
+    DealFromEmptyDeck {},
 
     #[fail(display = "rewind into the future")]
-    RewindIntoFuture{},
+    RewindIntoFuture {},
 }
