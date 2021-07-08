@@ -24,19 +24,17 @@ impl From<Card> for [u8; 2] {
 }
 
 pub fn successor(c: Card) -> Option<Card> {
-    if let Some(r) = rank::successor(c.rank) {
-        Some(Card {
+    rank::successor(c.rank)
+        .map(|r| Card {
             suit: c.suit,
             rank: r,
         })
-    } else if let Some(s) = suit::successor(c.suit) {
-        Some(Card {
-            suit: s,
-            rank: rank::first(),
+        .or_else(|| {
+            suit::successor(c.suit).map(|s| Card {
+                suit: s,
+                rank: rank::first(),
+            })
         })
-    } else {
-        None
-    }
 }
 
 pub struct Iter<Card> {
