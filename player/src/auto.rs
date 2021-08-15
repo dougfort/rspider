@@ -49,8 +49,8 @@ pub fn play(client: &mut client::Client) -> Result<(), Error> {
             }
         }
 
-        display::local_game(&client);
-        display::possible_moves(&client)?;
+        display::local_game(client);
+        display::possible_moves(client)?;
 
         let wait_time = time::Duration::from_secs(2);
         thread::sleep(wait_time);
