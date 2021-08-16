@@ -1,4 +1,4 @@
-use failure::Error;
+use anyhow::Result;
 
 pub fn help() {
     println!("quit: exit game");
@@ -43,7 +43,7 @@ pub fn local_game(client: &client::Client) {
     }
 }
 
-pub fn possible_moves(client: &client::Client) -> Result<(), Error> {
+pub fn possible_moves(client: &client::Client) -> Result<()> {
     println!();
     println!("possible moves");
     println!();
