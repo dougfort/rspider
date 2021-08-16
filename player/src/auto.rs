@@ -1,9 +1,9 @@
-use failure::Error;
+use anyhow::Result;
 use std::{thread, time};
 
 use super::display;
 
-pub fn play(client: &mut client::Client) -> Result<(), Error> {
+pub fn play(client: &mut client::Client) -> Result<()> {
     let mut play = 0;
     let mut prev_move = (0, 0, 0);
 

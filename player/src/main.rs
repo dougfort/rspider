@@ -1,11 +1,10 @@
-use failure::Error;
-use std::io::Write;
-use std::io::{stdin, stdout};
+use anyhow::Result;
+use std::io::{stdin, stdout, Write};
 
 mod auto;
 mod display;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let mut client = match std::env::args().nth(1) {
         Some(seed) => client::Client::from_hex(&seed)?,
         None => client::Client::new()?,
