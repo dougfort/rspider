@@ -7,5 +7,6 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 hex = "0.3.2"
+rustyline = "8.2"
 cards = {path = "../cards" }
 client = {path = "../client" }
