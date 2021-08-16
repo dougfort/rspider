@@ -1,23 +1,24 @@
 use crate::Move;
-use failure::Fail;
+use thiserror::Error;
 
-#[derive(Debug, Fail)]
+/// GameError is the base class for all errors that occur during the game.
+#[derive(Error, Debug)]
 pub enum GameError {
-    #[fail(display = "invalid deal to empty column")]
+    #[error("invalid deal to empty column")]
     DealToEmptyColumn {},
 
-    #[fail(display = "Invalid Move {:?}", mv)]
+    #[error("Invalid Move {:?}", mv)]
     InvalidMove { mv: Move },
 
-    #[fail(display = "no checkpoints to undo")]
+    #[error("no checkpoints to undo")]
     NoCheckpointsToUndo {},
 
-    #[fail(display = "unknown checkpoint")]
+    #[error("unknown checkpoint")]
     UnknownCheckpoint {},
 
-    #[fail(display = "deal from empty deck")]
+    #[error("deal from empty deck")]
     DealFromEmptyDeck {},
 
-    #[fail(display = "rewind into the future")]
+    #[error("rewind into the future")]
     RewindIntoFuture {},
 }

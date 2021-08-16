@@ -1,4 +1,4 @@
-use failure::Error;
+use crate::error::ClientError;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 
@@ -6,7 +6,6 @@ use game::delta::Delta;
 use game::Move;
 
 pub mod error;
-use error::ClientError::*;
 
 const WIDTH: usize = 10;
 type Column = Vec<Option<cards::Card>>;
@@ -25,11 +24,11 @@ pub struct PotentialMove {
 }
 
 impl Client {
-    pub fn new() -> Result<Client, Error> {
+    pub fn new() -> Result<Client, ClientError> {
         client_from_game(game::Game::new()?)
     }
 
-    pub fn from_hex(hex_seed: &str) -> Result<Client, Error> {
+    pub fn from_hex(hex_seed: &str) -> Result<Client, ClientError> {
         let seed = game::seed::from_hex(hex_seed)?;
 
         let game = game::Game::from_seed(seed)?;
@@ -52,13 +51,13 @@ impl Client {
         self.remote.checkpoints()
     }
 
-    pub fn deal(&mut self) -> std::result::Result<(), Error> {
+    pub fn deal(&mut self) -> std::result::Result<(), ClientError> {
         for delta in self.remote.deal()? {
             use game::delta::Delta::*;
             match delta {
                 AppendCard { index: i, card: c } => self.local[i].push(Some(c)),
                 _ => {
-                    return Err(UnknownDelta { delta }.into());
+                    return Err(ClientError::UnknownDelta { delta });
                 }
             }
         }
@@ -66,7 +65,7 @@ impl Client {
         Ok(())
     }
 
-    pub fn undo(&mut self) -> Result<(), Error> {
+    pub fn undo(&mut self) -> Result<(), ClientError> {
         let deltas = self.remote.undo()?;
         self.apply_deltas(deltas)?;
         self.used.remove(&self.digest());
@@ -92,7 +91,7 @@ impl Client {
         hex::encode(hasher.result())
     }
 
-    pub fn possible_moves(&self) -> Result<Vec<PotentialMove>, Error> {
+    pub fn possible_moves(&self) -> Result<Vec<PotentialMove>, ClientError> {
         let is_used = |m| match self.used.get(&self.digest()) {
             Some(u) => u == &m,
             None => false,
@@ -120,7 +119,7 @@ impl Client {
                 }
             }
             if count == 0 {
-                return Err(NoMove {}.into());
+                return Err(ClientError::NoMove {});
             }
             let valid_dest_rank = match cards::rank::successor(cards[0].rank) {
                 None => continue,
@@ -146,7 +145,7 @@ impl Client {
                 }
                 match dest[dest.len() - 1] {
                     None => {
-                        return Err(BottomNotVisible {}.into());
+                        return Err(ClientError::BottomNotVisible {});
                     }
                     Some(dc) => {
                         if dc.rank == valid_dest_rank {
@@ -169,7 +168,7 @@ impl Client {
         Ok(moves)
     }
 
-    pub fn move_cards(&mut self, m: game::Move) -> Result<(), Error> {
+    pub fn move_cards(&mut self, m: game::Move) -> Result<(), ClientError> {
         let pre_move_digest = self.digest();
 
         let deltas = self.remote.move_cards(m)?;
@@ -180,7 +179,7 @@ impl Client {
         Ok(())
     }
 
-    fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), Error> {
+    fn apply_deltas(&mut self, deltas: Vec<Delta>) -> Result<(), ClientError> {
         for delta in deltas {
             match delta {
                 Delta::HiddenCard { index: i } => self.local[i].push(None),
@@ -195,7 +194,7 @@ impl Client {
     }
 }
 
-fn client_from_game(game: game::Game) -> Result<Client, Error> {
+fn client_from_game(game: game::Game) -> Result<Client, ClientError> {
     let mut client = Client {
         remote: game,
         used: HashMap::new(),

@@ -1,14 +1,14 @@
 // game definitions
 
 use self::delta::Delta;
-use failure::Error;
+use error::GameError;
 
 pub mod delta;
 pub mod error;
 pub mod seed;
 pub mod source;
 
-use error::GameError::*;
+//use error::GameError;
 
 #[derive(Debug, PartialOrd, PartialEq, Clone, Copy)]
 pub enum ColumnCard {
@@ -55,16 +55,16 @@ fn initial_counts() -> [usize; WIDTH] {
 
 impl Game {
     // create a new game from a randomly generated seed
-    pub fn new() -> Result<Game, Error> {
+    pub fn new() -> Result<Game, GameError> {
         Game::from_source(source::Source::new())
     }
 
     // create a new game from a specified seed
-    pub fn from_seed(seed: [u8; 16]) -> Result<Game, Error> {
+    pub fn from_seed(seed: [u8; 16]) -> Result<Game, GameError> {
         Game::from_source(source::Source::from_seed(seed))
     }
 
-    fn from_source(mut source: source::Source) -> Result<Game, Error> {
+    fn from_source(mut source: source::Source) -> Result<Game, GameError> {
         let checkpoint_count = source.cards_dealt();
 
         let mut columns: Vec<Vec<ColumnCard>> = Vec::new();
@@ -123,7 +123,7 @@ impl Game {
         deltas
     }
 
-    pub fn deal(&mut self) -> Result<Vec<delta::Delta>, Error> {
+    pub fn deal(&mut self) -> Result<Vec<delta::Delta>, GameError> {
         let mut deltas: Vec<delta::Delta> = Vec::new();
         let checkpoint_count = self.source.cards_dealt();
 
@@ -131,7 +131,7 @@ impl Game {
         // anything on error
         for i in 0..WIDTH {
             if self.columns[i].is_empty() {
-                return Err(DealToEmptyColumn {}.into());
+                return Err(GameError::DealToEmptyColumn {});
             }
         }
 
@@ -148,9 +148,9 @@ impl Game {
         Ok(deltas)
     }
 
-    pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, Error> {
+    pub fn move_cards(&mut self, m: Move) -> Result<Vec<delta::Delta>, GameError> {
         if !self.is_move_valid(&m) {
-            return Err(InvalidMove { mv: m }.into());
+            return Err(GameError::InvalidMove { mv: m });
         };
 
         let mut deltas = Vec::<delta::Delta>::new();
@@ -201,7 +201,7 @@ impl Game {
         &mut self,
         m: Move,
         flipped_hidden_card: bool,
-    ) -> Result<Vec<delta::Delta>, Error> {
+    ) -> Result<Vec<delta::Delta>, GameError> {
         let mut deltas = Vec::<delta::Delta>::new();
 
         // we are moving from dest to orig: this is undo
@@ -234,9 +234,9 @@ impl Game {
         Ok(deltas)
     }
 
-    pub fn undo(&mut self) -> Result<Vec<delta::Delta>, Error> {
+    pub fn undo(&mut self) -> Result<Vec<delta::Delta>, GameError> {
         if self.checkpoints.len() < 2 {
-            return Err(NoCheckpointsToUndo {}.into());
+            return Err(GameError::NoCheckpointsToUndo {});
         };
 
         match self.checkpoints.pop() {
@@ -253,7 +253,7 @@ impl Game {
                 action,
                 flipped_hidden_card,
             }) => self.reverse_move_cards(action, flipped_hidden_card),
-            _unknown => Err(UnknownCheckpoint {}.into()),
+            _unknown => Err(GameError::UnknownCheckpoint {}),
         }
     }
 
